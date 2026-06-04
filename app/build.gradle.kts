@@ -59,4 +59,11 @@ dependencies {
     implementation(libs.miuix.icons)
     implementation(libs.miuix.preference)
     implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.compose.foundation)
+
+    // Network
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.gson)
+    implementation(libs.okhttp)
+    implementation(libs.gson)
 }

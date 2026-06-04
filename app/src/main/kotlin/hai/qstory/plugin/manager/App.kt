@@ -14,9 +14,13 @@ import top.yukonga.miuix.kmp.basic.NavigationBar
 import top.yukonga.miuix.kmp.basic.NavigationBarItem
 import top.yukonga.miuix.kmp.basic.NavigationItem
 import top.yukonga.miuix.kmp.basic.Scaffold
+import top.yukonga.miuix.kmp.basic.TopAppBar
+import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Info
 import top.yukonga.miuix.kmp.icon.extended.Settings
+import top.yukonga.miuix.kmp.icon.extended.Search
+import top.yukonga.miuix.kmp.icon.extended.More
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.ThemeController
 import top.yukonga.miuix.kmp.theme.ColorSchemeMode
@@ -47,6 +51,26 @@ fun App(
 
         Scaffold(
             modifier = Modifier.fillMaxSize(),
+            topBar = {
+                TopAppBar(
+                    title = when (pagerState.currentPage) {
+                        0 -> "脚本列表"
+                        1 -> "主题设置"
+                        else -> ""
+                    },
+                    actions = {
+                        when (pagerState.currentPage) {
+                            0 -> {
+                                Icon(imageVector = MiuixIcons.Search, contentDescription = "搜索")
+                                Icon(imageVector = MiuixIcons.More, contentDescription = "更多")
+                            }
+                            1 -> {
+                                Icon(imageVector = MiuixIcons.More, contentDescription = "更多")
+                            }
+                        }
+                    }
+                )
+            },
             bottomBar = {
                 NavigationBar {
                     navigationItems.forEachIndexed { index, item ->

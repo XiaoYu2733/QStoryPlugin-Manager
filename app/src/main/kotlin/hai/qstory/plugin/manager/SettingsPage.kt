@@ -10,7 +10,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.preference.RadioButtonPreference
 
 @Composable
@@ -22,7 +21,6 @@ fun SettingsPage(
         modifier = Modifier.fillMaxSize()
     ) {
         item {
-            SmallTitle(text = "主题设置")
             Card(
                 modifier = Modifier.padding(12.dp)
             ) {
