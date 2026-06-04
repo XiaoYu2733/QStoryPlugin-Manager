@@ -10,6 +10,8 @@ import okhttp3.Request
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
+import java.text.Normalizer
+import java.util.regex.Pattern
 
 class PluginDownloadManager(private val context: Context) {
 
@@ -27,18 +29,34 @@ class PluginDownloadManager(private val context: Context) {
         qstoryPluginDir
     }
 
+    private val INVALID_CHARS = Pattern.compile("[^a-zA-Z0-9\\u4e00-\\u9fa5._-]")
+
+    private fun sanitizeFileName(name: String): String {
+        val normalized = Normalizer.normalize(name, Normalizer.Form.NFD)
+        val cleaned = INVALID_CHARS.matcher(normalized).replaceAll("")
+        return cleaned.trim()
+    }
+
+    private fun generateFileName(pluginName: String, cloudId: String): String {
+        val sanitizedName = sanitizeFileName(pluginName)
+        return "${sanitizedName}_$cloudId.zip"
+    }
+
     suspend fun downloadPlugin(
         pluginName: String,
-        downloadUrl: String,
-        fileName: String,
+        cloudId: String,
+        serverFileName: String,
         onProgress: (Int) -> Unit = {}
-    ): Result<Unit> = withContext(Dispatchers.IO) {
+    ): Result<String> = withContext(Dispatchers.IO) {
         try {
-            Log.d("PluginDownloadManager", "Starting download: $downloadUrl")
-            Log.d("PluginDownloadManager", "Target dir: ${pluginDir.absolutePath}")
-            Log.d("PluginDownloadManager", "Target file: $fileName")
+            val downloadUrl = "https://plugin.suzhelan.top/api/plugin/plugins/files/$cloudId"
+            val fileName = generateFileName(pluginName, cloudId)
 
-            // 确保目录存在
+            Log.d("PluginDownloadManager", "Starting download: $downloadUrl")
+            Log.d("PluginDownloadManager", "Plugin name: $pluginName")
+            Log.d("PluginDownloadManager", "Generated file name: $fileName")
+            Log.d("PluginDownloadManager", "Target dir: ${pluginDir.absolutePath}")
+
             if (!pluginDir.exists()) {
                 pluginDir.mkdirs()
             }
@@ -87,7 +105,7 @@ class PluginDownloadManager(private val context: Context) {
             inputStream.close()
 
             Log.d("PluginDownloadManager", "Download completed: ${file.absolutePath}, size: ${file.length()}")
-            Result.success(Unit)
+            Result.success(fileName)
         } catch (e: Exception) {
             Log.e("PluginDownloadManager", "Download error", e)
             Result.failure(e)
