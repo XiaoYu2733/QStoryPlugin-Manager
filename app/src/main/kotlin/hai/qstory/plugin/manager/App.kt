@@ -57,17 +57,6 @@ fun App(
                         0 -> "脚本列表"
                         1 -> "主题设置"
                         else -> ""
-                    },
-                    actions = {
-                        when (pagerState.currentPage) {
-                            0 -> {
-                                Icon(imageVector = MiuixIcons.Search, contentDescription = "搜索")
-                                Icon(imageVector = MiuixIcons.More, contentDescription = "更多")
-                            }
-                            1 -> {
-                                Icon(imageVector = MiuixIcons.More, contentDescription = "更多")
-                            }
-                        }
                     }
                 )
             },

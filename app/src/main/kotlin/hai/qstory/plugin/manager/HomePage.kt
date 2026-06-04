@@ -2,6 +2,11 @@ package hai.qstory.plugin.manager
 
 import android.content.Context
 import android.widget.Toast
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -14,6 +19,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -29,10 +37,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import hai.qstory.plugin.manager.data.OnlinePluginInfo
 import hai.qstory.plugin.manager.manager.PluginDownloadManager
 import hai.qstory.plugin.manager.network.RetrofitClient
@@ -155,13 +166,39 @@ fun HomePage() {
         // 脚本列表
         if (isLoading) {
             item {
-                Card(
-                    modifier = Modifier.padding(16.dp)
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(400.dp),
+                    contentAlignment = Alignment.Center
                 ) {
                     Column(
-                        modifier = Modifier.padding(16.dp)
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text(text = "加载中...")
+                        val infiniteTransition = rememberInfiniteTransition(label = "rotation")
+                        val rotation by infiniteTransition.animateFloat(
+                            initialValue = 0f,
+                            targetValue = 360f,
+                            animationSpec = infiniteRepeatable(
+                                animation = tween(1000, easing = LinearEasing)
+                            ),
+                            label = "rotation"
+                        )
+
+                        Text(
+                            text = "↻",
+                            style = MiuixTheme.textStyles.body1.copy(fontSize = 40.sp),
+                            color = MiuixTheme.colorScheme.onSurfaceSecondary,
+                            modifier = Modifier
+                                .size(40.dp)
+                                .rotate(rotation)
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "加载中...",
+                            style = MiuixTheme.textStyles.body2,
+                            color = MiuixTheme.colorScheme.onSurfaceSecondary
+                        )
                     }
                 }
             }
@@ -364,12 +401,6 @@ fun PluginCard(
 
                 if (plugin.pluginInfo.tags.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(12.dp))
-                    Text(
-                        text = "标签",
-                        style = MiuixTheme.textStyles.body2,
-                        color = MiuixTheme.colorScheme.onSurfaceSecondary
-                    )
-                    Spacer(modifier = Modifier.height(4.dp))
                     androidx.compose.foundation.layout.FlowRow(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
@@ -451,18 +482,13 @@ fun TagChip(tag: String) {
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(12.dp))
-            .background(MiuixTheme.colorScheme.primary.copy(alpha = 0.15f))
-            .border(
-                width = 1.dp,
-                color = MiuixTheme.colorScheme.primary.copy(alpha = 0.3f),
-                shape = RoundedCornerShape(12.dp)
-            )
+            .background(MiuixTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f))
             .padding(horizontal = 12.dp, vertical = 6.dp)
     ) {
         Text(
             text = tag,
             style = MiuixTheme.textStyles.body2,
-            color = MiuixTheme.colorScheme.primary
+            color = MiuixTheme.colorScheme.onSecondaryContainer
         )
     }
 }
