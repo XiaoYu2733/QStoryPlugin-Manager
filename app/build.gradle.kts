@@ -6,12 +6,12 @@ plugins {
 
 android {
     namespace = "hai.qstory.plugin.manager"
-    compileSdk = 35
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "hai.qstory.plugin.manager"
         minSdk = 24
-        targetSdk = 35
+        targetSdk = 37
         versionCode = 1
         versionName = "1.0.0"
 
@@ -40,9 +40,23 @@ android {
     buildFeatures {
         compose = true
     }
+
+    composeOptions {
+        kotlinCompilerVersion = "2.1.0"
+    }
+}
+
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+    kotlinOptions {
+        freeCompilerArgs += listOf(
+            "-Xskip-metadata-version-check"
+        )
+    }
 }
 
 dependencies {
     implementation(libs.miuix)
+    implementation(libs.miuix.icons)
+    implementation(libs.miuix.preference)
     implementation(libs.androidx.activity.compose)
 }

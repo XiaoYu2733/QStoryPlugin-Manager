@@ -1,6 +1,5 @@
 package hai.qstory.plugin.manager
 
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
@@ -9,11 +8,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.basic.BasicComponent
-import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.NavigationBar
 import top.yukonga.miuix.kmp.basic.NavigationBarItem
 import top.yukonga.miuix.kmp.basic.NavigationItem
@@ -23,6 +19,7 @@ import top.yukonga.miuix.kmp.icon.extended.Info
 import top.yukonga.miuix.kmp.icon.extended.Settings
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.ThemeController
+import top.yukonga.miuix.kmp.theme.ColorSchemeMode
 
 @Composable
 fun App(
@@ -31,9 +28,9 @@ fun App(
 ) {
     val themeController = remember(colorMode) {
         when (colorMode) {
-            1 -> ThemeController(lightMode = true)
-            2 -> ThemeController(lightMode = false)
-            else -> ThemeController(lightMode = null)
+            1 -> ThemeController(ColorSchemeMode.Light)
+            2 -> ThemeController(ColorSchemeMode.Dark)
+            else -> ThemeController(ColorSchemeMode.System)
         }
     }
 
@@ -60,7 +57,7 @@ fun App(
                                     pagerState.animateScrollToPage(index)
                                 }
                             },
-                            icon = { Icon(imageVector = item.icon, contentDescription = item.label) },
+                            icon = item.icon,
                             label = item.label,
                         )
                     }

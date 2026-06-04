@@ -31,8 +31,8 @@ fun HomePage() {
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = "这里是存放脚本的页面",
-                        style = MiuixTheme.textStyles().body2,
-                        color = MiuixTheme.colorScheme.onSurfaceVariant
+                        style = MiuixTheme.textStyles.body2,
+                        color = MiuixTheme.colorScheme.onSurfaceSecondary
                     )
                 }
             }

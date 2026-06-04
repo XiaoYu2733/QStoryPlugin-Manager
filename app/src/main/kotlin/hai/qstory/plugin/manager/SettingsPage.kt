@@ -11,7 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.SmallTitle
-import top.yukonga.miuix.kmp.preference.RadioPreference
+import top.yukonga.miuix.kmp.preference.RadioButtonPreference
 
 @Composable
 fun SettingsPage(
@@ -27,17 +27,17 @@ fun SettingsPage(
                 modifier = Modifier.padding(12.dp)
             ) {
                 Column {
-                    RadioPreference(
+                    RadioButtonPreference(
                         title = "跟随系统",
                         selected = colorMode == 0,
                         onClick = { onColorModeChange(0) }
                     )
-                    RadioPreference(
+                    RadioButtonPreference(
                         title = "浅色模式",
                         selected = colorMode == 1,
                         onClick = { onColorModeChange(1) }
                     )
-                    RadioPreference(
+                    RadioButtonPreference(
                         title = "深色模式",
                         selected = colorMode == 2,
                         onClick = { onColorModeChange(2) }
