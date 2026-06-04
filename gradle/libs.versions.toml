@@ -1,0 +1,15 @@
+[versions]
+agp = "8.6.0"
+kotlin = "2.0.21"
+miuix = "0.9.0"
+compose-bom = "2024.12.01"
+activity = "1.9.3"
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+jetbrains-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
+jetbrains-compose-compiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+
+[libraries]
+miuix = { module = "top.yukonga.miuix.kmp:miuix-ui-android", version.ref = "miuix" }
+androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activity" }
