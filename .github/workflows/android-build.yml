@@ -36,7 +36,7 @@ jobs:
       # 构建 签名apk
       - name: Build APK
         run: |
-          ./gradlew :app:assembleDbeug
+          ./gradlew :app:assembleDebug
 
 
       # 上次 签名apk
