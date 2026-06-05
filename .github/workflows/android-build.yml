@@ -2,27 +2,60 @@ name: Android CI
 
 on:
   push:
-    branches: [ "main", "master" ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ "main", "master" ]
+    branches: [ "main" ]
 
 jobs:
   build:
+    # 运行系统
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v4
+      # 签出代码
+      - uses: actions/checkout@v5
+        with:
+          submodules: true
+          fetch-depth: 0
 
-    - name: Set up JDK 17
-      uses: actions/setup-java@v4
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-        cache: gradle
+      # 配置 submodules
+      - name: Config submodules
+        run: |
+          git submodule foreach git submodule update --init --recursive
 
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
+      # 配置 jdk
+      - name: Setup Java JDK
+        uses: actions/setup-java@v5.0.0
+        with:
+          java-version: 17
+          distribution: temurin
 
-    - name: Build with Gradle
-      run: ./gradlew assembleDebug
+      # 配置 gradle
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v5
+
+      # 授权
+      - name: Grant execute permission to gradlew
+        run: chmod +x ./gradlew
+
+      # 解码签名到工作环境, 生成在./下, 生成命令: certutil -encode .\keystore.jks encoded.txt
+      - name: Decode keystore
+        run: echo "${{ secrets.SIGN_KEYSTORE_BASE64 }}" | base64 --decode > keystore.jks
+
+      # 构建 签名apk
+      - name: Build APK
+        run: |
+          ./gradlew :app:assembleDevelopRelease
+        env:
+          KEYSTORE_PATH: "../keystore.jks"
+          KEYSTORE_PASSWORD: ${{ secrets.SIGN_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.SIGN_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.SIGN_KEY_PASSWORD }}
+
+      # 上次 签名apk
+      - name: Upload APK
+        uses: actions/upload-artifact@v5
+        with:
+          name: QStory-Signed.apk
+          path: ./app/build/outputs/apk/develop/release/*.apk
+          retention-days: 1
