@@ -5,25 +5,30 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import kotlinx.coroutines.launch
-import top.yukonga.miuix.kmp.basic.BasicComponent
+import top.yukonga.miuix.kmp.basic.IconButton
+import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.NavigationBar
 import top.yukonga.miuix.kmp.basic.NavigationBarItem
 import top.yukonga.miuix.kmp.basic.NavigationItem
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.TopAppBar
-import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Info
 import top.yukonga.miuix.kmp.icon.extended.Settings
-import top.yukonga.miuix.kmp.icon.extended.Search
-import top.yukonga.miuix.kmp.icon.extended.More
+import top.yukonga.miuix.kmp.icon.extended.Back
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.ThemeController
 import top.yukonga.miuix.kmp.theme.ColorSchemeMode
+import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.navigation3.runtime.NavKey
 
 @Composable
 fun App(
@@ -39,8 +44,30 @@ fun App(
     }
 
     MiuixTheme(controller = themeController) {
-        val pagerState = rememberPagerState(pageCount = { 2 })
         val coroutineScope = rememberCoroutineScope()
+
+        // Navigation stack
+        val navStack = remember { mutableStateListOf<NavKey>(Route.Main) }
+        var currentRoute by remember { mutableStateOf<NavKey>(Route.Main) }
+
+        val navigator = remember {
+            object : AppNavigator {
+                override val backStack: SnapshotStateList<NavKey> = navStack
+                override fun push(route: NavKey) {
+                    navStack.add(route)
+                    currentRoute = route
+                }
+                override fun pop() {
+                    if (navStack.size > 1) {
+                        navStack.removeLast()
+                        currentRoute = navStack.last()
+                    }
+                }
+                override fun current() = currentRoute
+            }
+        }
+
+        val pagerState = rememberPagerState(pageCount = { 2 })
 
         val navigationItems = remember {
             listOf(
@@ -49,43 +76,78 @@ fun App(
             )
         }
 
+        // Main navigation handling
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             topBar = {
-                TopAppBar(
-                    title = when (pagerState.currentPage) {
-                        0 -> "脚本列表"
-                        1 -> "主题设置"
-                        else -> ""
+                when (val route = navigator.current()) {
+                    is Route.Main -> {
+                        TopAppBar(
+                            title = when (pagerState.currentPage) {
+                                0 -> "脚本列表"
+                                1 -> "主题设置"
+                                else -> ""
+                            }
+                        )
                     }
-                )
+                    is Route.PluginDetail -> {
+                        TopAppBar(
+                            title = "脚本详情",
+                            navigationIcon = {
+                                IconButton(
+                                    onClick = { navigator.pop() }
+                                ) {
+                                    Icon(
+                                        imageVector = MiuixIcons.Back,
+                                        contentDescription = "返回",
+                                        tint = MiuixTheme.colorScheme.onBackground
+                                    )
+                                }
+                            }
+                        )
+                    }
+                }
             },
             bottomBar = {
-                NavigationBar {
-                    navigationItems.forEachIndexed { index, item ->
-                        NavigationBarItem(
-                            selected = pagerState.currentPage == index,
-                            onClick = {
-                                coroutineScope.launch {
-                                    pagerState.animateScrollToPage(index)
-                                }
-                            },
-                            icon = item.icon,
-                            label = item.label,
-                        )
+                if (navigator.current() == Route.Main) {
+                    NavigationBar {
+                        navigationItems.forEachIndexed { index, item ->
+                            NavigationBarItem(
+                                selected = pagerState.currentPage == index,
+                                onClick = {
+                                    coroutineScope.launch {
+                                        pagerState.animateScrollToPage(index)
+                                    }
+                                },
+                                icon = item.icon,
+                                label = item.label,
+                            )
+                        }
                     }
                 }
             }
         ) { innerPadding ->
-            HorizontalPager(
-                state = pagerState,
-                modifier = Modifier.padding(innerPadding),
-            ) { page ->
-                when (page) {
-                    0 -> HomePage()
-                    1 -> SettingsPage(
-                        colorMode = colorMode,
-                        onColorModeChange = onColorModeChange
+            when (val route = navigator.current()) {
+                is Route.Main -> {
+                    HorizontalPager(
+                        state = pagerState,
+                        modifier = Modifier.padding(innerPadding),
+                    ) { page ->
+                        when (page) {
+                            0 -> HomePage(
+                                navigator = navigator
+                            )
+                            1 -> SettingsPage(
+                                colorMode = colorMode,
+                                onColorModeChange = onColorModeChange
+                            )
+                        }
+                    }
+                }
+                is Route.PluginDetail -> {
+                    PluginDetailPage(
+                        cloudId = (route as Route.PluginDetail).cloudId,
+                        navigator = navigator
                     )
                 }
             }
