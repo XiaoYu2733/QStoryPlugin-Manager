@@ -29,20 +29,46 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v5
 
+      # 安装 Android SDK
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      # 接受 Android SDK 许可证并安装所需平台
+      - name: Install Android SDK Components
+        run: |
+          yes | sdkmanager --licenses || true
+          sdkmanager "platforms;android-37" "build-tools;37.0.0"
+
+      # 配置 gradle
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v5
+
       # 授权
       - name: Grant execute permission to gradlew
         run: chmod +x ./gradlew
 
-      # 构建 签名apk
+      # 生成签名密钥
+      - name: Generate Release Keystore
+        run: |
+          keytool -genkeypair \
+            -alias qstory \
+            -keyalg RSA \
+            -keysize 2048 \
+            -validity 10000 \
+            -storepass qstory2024 \
+            -keypass qstory2024 \
+            -dname "CN=QStory CI, OU=Development, O=QStory, C=CN" \
+            -keystore ./app/release-key.jks
+
+      # 构建 release apk
       - name: Build APK
         run: |
-          ./gradlew :app:assembleDebug
+          ./gradlew :app:assembleRelease
 
-
-      # 上次 签名apk
+      # 上传 release apk
       - name: Upload APK
         uses: actions/upload-artifact@v7
         with:
-          name: App-unsign.apk
+          name: App-release.apk
           path: ./app/build/outputs/apk/release/*.apk
-          retention-days: 1
+          retention-days: 7
