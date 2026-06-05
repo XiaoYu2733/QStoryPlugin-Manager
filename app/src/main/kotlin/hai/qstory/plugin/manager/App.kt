@@ -2,6 +2,7 @@ package hai.qstory.plugin.manager
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
@@ -79,35 +80,7 @@ fun App(
         // Main navigation handling
         Scaffold(
             modifier = Modifier.fillMaxSize(),
-            topBar = {
-                when (val route = navigator.current()) {
-                    is Route.Main -> {
-                        TopAppBar(
-                            title = when (pagerState.currentPage) {
-                                0 -> "脚本列表"
-                                1 -> "主题设置"
-                                else -> ""
-                            }
-                        )
-                    }
-                    is Route.PluginDetail -> {
-                        TopAppBar(
-                            title = "脚本详情",
-                            navigationIcon = {
-                                IconButton(
-                                    onClick = { navigator.pop() }
-                                ) {
-                                    Icon(
-                                        imageVector = MiuixIcons.Back,
-                                        contentDescription = "返回",
-                                        tint = MiuixTheme.colorScheme.onBackground
-                                    )
-                                }
-                            }
-                        )
-                    }
-                }
-            },
+            topBar = { null },
             bottomBar = {
                 if (navigator.current() == Route.Main) {
                     NavigationBar {

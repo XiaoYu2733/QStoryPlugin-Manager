@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.background
 import androidx.compose.foundation.lazy.LazyColumn
@@ -34,6 +35,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -57,6 +60,8 @@ import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Back
+import top.yukonga.miuix.kmp.icon.extended.Info
+import top.yukonga.miuix.kmp.icon.extended.Settings
 
 sealed class DownloadState {
     data object Idle : DownloadState()
@@ -141,7 +146,9 @@ fun HomePage(
                     Spacer(modifier = Modifier.width(8.dp))
                     Button(
                         onClick = { showTagDialog = !showTagDialog },
-                        modifier = Modifier.width(120.dp)
+                        modifier = Modifier
+                            .height(56.dp)
+                            .width(120.dp)
                     ) {
                         Text(selectedTag)
                     }
@@ -178,25 +185,18 @@ fun HomePage(
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        val infiniteTransition = rememberInfiniteTransition(label = "rotation")
-                        val rotation by infiniteTransition.animateFloat(
-                            initialValue = 0f,
-                            targetValue = 360f,
-                            animationSpec = infiniteRepeatable(
-                                animation = tween(1000, easing = LinearEasing)
-                            ),
-                            label = "rotation"
-                        )
+                        // 三个跳动的圆点
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            DotAnimation(delayMillis = 0)
+                            DotAnimation(delayMillis = 150)
+                            DotAnimation(delayMillis = 300)
+                        }
 
-                        Text(
-                            text = "↻",
-                            style = MiuixTheme.textStyles.body1.copy(fontSize = 40.sp),
-                            color = MiuixTheme.colorScheme.onSurfaceSecondary,
-                            modifier = Modifier
-                                .size(40.dp)
-                                .rotate(rotation)
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(24.dp))
+
                         Text(
                             text = "加载中...",
                             style = MiuixTheme.textStyles.body2,
@@ -412,45 +412,41 @@ fun PluginDetailPage(
         }
     }
 
-    Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        topBar = {
-            TopAppBar(
-                title = "脚本详情",
-                navigationIcon = {
-                    IconButton(
-                        onClick = { navigator.pop() }
-                    ) {
-                        Icon(
-                            imageVector = MiuixIcons.Back,
-                            contentDescription = "返回",
-                            tint = MiuixTheme.colorScheme.onBackground
-                        )
-                    }
-                }
-            )
-        }
-    ) { innerPadding ->
+    Box(
+        modifier = Modifier.fillMaxSize()
+    ) {
         when {
             isLoading -> {
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding),
+                    modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "加载中...",
-                        style = MiuixTheme.textStyles.body2,
-                        color = MiuixTheme.colorScheme.onSurfaceSecondary
-                    )
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        // 三个跳动的圆点
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            DotAnimation(delayMillis = 0)
+                            DotAnimation(delayMillis = 150)
+                            DotAnimation(delayMillis = 300)
+                        }
+
+                        Spacer(modifier = Modifier.height(24.dp))
+
+                        Text(
+                            text = "加载中...",
+                            style = MiuixTheme.textStyles.body2,
+                            color = MiuixTheme.colorScheme.onSurfaceSecondary
+                        )
+                    }
                 }
             }
             plugin == null -> {
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding),
+                    modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -462,28 +458,31 @@ fun PluginDetailPage(
             }
             else -> {
                 LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(innerPadding)
+                    modifier = Modifier.fillMaxSize()
                 ) {
+                    // 顶部间距，为返回按钮留出空间
+                    item {
+                        Spacer(modifier = Modifier.height(100.dp))
+                    }
+
+                    // 头部大卡片
                     item {
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(16.dp)
+                                .padding(horizontal = 20.dp)
                         ) {
                             Column(
-                                modifier = Modifier.padding(16.dp)
+                                modifier = Modifier.padding(20.dp)
                             ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
+                                // 脚本名称和版本
+                                Column {
                                     Text(
                                         text = plugin!!.pluginInfo.name,
-                                        style = MiuixTheme.textStyles.body1.copy(fontSize = 20.sp),
+                                        style = MiuixTheme.textStyles.body1.copy(fontSize = 24.sp),
                                         fontWeight = FontWeight.Bold
                                     )
-                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Spacer(modifier = Modifier.height(4.dp))
                                     Text(
                                         text = "v${plugin!!.pluginInfo.version}",
                                         style = MiuixTheme.textStyles.body2,
@@ -491,117 +490,180 @@ fun PluginDetailPage(
                                     )
                                 }
 
-                                Spacer(modifier = Modifier.height(8.dp))
+                                Spacer(modifier = Modifier.height(20.dp))
 
+                                // 作者信息
                                 Text(
-                                    text = "作者：${plugin!!.pluginInfo.author}",
-                                    style = MiuixTheme.textStyles.body2,
-                                    color = MiuixTheme.colorScheme.onSurfaceSecondary
-                                )
-
-                                Spacer(modifier = Modifier.height(8.dp))
-
-                                Text(
-                                    text = "脚本ID：${plugin!!.pluginInfo.pluginId}",
+                                    text = "作者: ${plugin!!.pluginInfo.author}",
                                     style = MiuixTheme.textStyles.body2,
                                     color = MiuixTheme.colorScheme.onSurfaceSecondary
                                 )
 
                                 Spacer(modifier = Modifier.height(12.dp))
 
-                                Column(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .clip(RoundedCornerShape(8.dp))
-                                        .background(MiuixTheme.colorScheme.secondaryContainer.copy(alpha = 0.2f))
-                                        .padding(12.dp)
-                                ) {
-                                    Text(
-                                        text = "简介",
-                                        style = MiuixTheme.textStyles.body2,
-                                        color = MiuixTheme.colorScheme.onSurfaceSecondary
-                                    )
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    SelectionContainer {
-                                        Text(
-                                            text = plugin!!.pluginInfo.description,
-                                            style = MiuixTheme.textStyles.body2
-                                        )
-                                    }
-                                }
+                                // 脚本ID
+                                Text(
+                                    text = "ID: ${plugin!!.pluginInfo.pluginId}",
+                                    style = MiuixTheme.textStyles.body2,
+                                    color = MiuixTheme.colorScheme.onSurfaceSecondary
+                                )
+                            }
+                        }
+                    }
 
-                                if (plugin!!.pluginInfo.tags.isNotEmpty()) {
-                                    Spacer(modifier = Modifier.height(12.dp))
+                    // 简介卡片
+                    item {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 20.dp, vertical = 8.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(18.dp)
+                            ) {
+                                Text(
+                                    text = "简介",
+                                    style = MiuixTheme.textStyles.body2,
+                                    color = MiuixTheme.colorScheme.onSurfaceSecondary
+                                )
+                                Spacer(modifier = Modifier.height(10.dp))
+                                SelectionContainer {
                                     Text(
-                                        text = "标签",
-                                        style = MiuixTheme.textStyles.body2,
-                                        color = MiuixTheme.colorScheme.onSurfaceSecondary
+                                        text = plugin!!.pluginInfo.description,
+                                        style = MiuixTheme.textStyles.body1,
+                                        lineHeight = 22.sp
                                     )
-                                    Spacer(modifier = Modifier.height(8.dp))
+                                }
+                            }
+                        }
+                    }
+
+                    // 标签卡片
+                    if (plugin!!.pluginInfo.tags.isNotEmpty()) {
+                        item {
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 20.dp, vertical = 8.dp)
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(18.dp)
+                                ) {
                                     androidx.compose.foundation.layout.FlowRow(
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                        verticalArrangement = Arrangement.spacedBy(10.dp)
                                     ) {
                                         plugin!!.pluginInfo.tags.forEach { tag ->
                                             TagChip(tag = tag)
                                         }
                                     }
                                 }
+                            }
+                        }
+                    }
 
-                                Spacer(modifier = Modifier.height(16.dp))
-
-                                HorizontalDivider()
-
-                                Spacer(modifier = Modifier.height(16.dp))
-
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.End
-                                ) {
+                    // 底部下载区域
+                    item {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(20.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(18.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column {
+                                    Text(
+                                        text = when (downloadState) {
+                                            is DownloadState.Idle -> if (isDownloaded) "已下载" else "准备下载"
+                                            is DownloadState.Downloading -> "下载中..."
+                                            is DownloadState.Success -> "下载完成"
+                                            is DownloadState.Failed -> "下载失败"
+                                        },
+                                        style = MiuixTheme.textStyles.body2,
+                                        color = MiuixTheme.colorScheme.onSurfaceSecondary
+                                    )
                                     when (downloadState) {
-                                        is DownloadState.Idle -> {
-                                            if (isDownloaded) {
-                                                Text(
-                                                    text = "✓ 已下载",
-                                                    style = MiuixTheme.textStyles.body1,
-                                                    color = Color(0xFF4CAF50)
-                                                )
-                                            } else {
-                                                Button(
-                                                    onClick = { startDownload() }
-                                                ) {
-                                                    Text("下载脚本")
-                                                }
-                                            }
-                                        }
                                         is DownloadState.Downloading -> {
+                                            Spacer(modifier = Modifier.height(4.dp))
                                             Text(
-                                                text = "下载中 ${(downloadState as DownloadState.Downloading).progress}%",
-                                                style = MiuixTheme.textStyles.body1,
-                                                color = MiuixTheme.colorScheme.onSurfaceSecondary
+                                                text = "${(downloadState as DownloadState.Downloading).progress}%",
+                                                style = MiuixTheme.textStyles.body2,
+                                                color = MiuixTheme.colorScheme.primary
                                             )
                                         }
-                                        is DownloadState.Success -> {
-                                            Text(
-                                                text = "✓ 下载完成",
-                                                style = MiuixTheme.textStyles.body1,
-                                                color = Color(0xFF4CAF50)
+                                        else -> {}
+                                    }
+                                }
+
+                                when (downloadState) {
+                                    is DownloadState.Idle -> {
+                                        if (isDownloaded) {
+                                            Icon(
+                                                imageVector = MiuixIcons.Info,
+                                                contentDescription = "已下载",
+                                                tint = Color(0xFF4CAF50),
+                                                modifier = Modifier.size(28.dp)
                                             )
-                                        }
-                                        is DownloadState.Failed -> {
+                                        } else {
                                             Button(
                                                 onClick = { startDownload() }
                                             ) {
-                                                Text("重试下载")
+                                                Text("下载")
                                             }
+                                        }
+                                    }
+                                    is DownloadState.Downloading -> {
+                                        Text(
+                                            text = "${(downloadState as DownloadState.Downloading).progress}%",
+                                            style = MiuixTheme.textStyles.body1,
+                                            color = MiuixTheme.colorScheme.primary
+                                        )
+                                    }
+                                    is DownloadState.Success -> {
+                                        Icon(
+                                            imageVector = MiuixIcons.Info,
+                                            contentDescription = "完成",
+                                            tint = Color(0xFF4CAF50),
+                                            modifier = Modifier.size(28.dp)
+                                        )
+                                    }
+                                    is DownloadState.Failed -> {
+                                        Button(
+                                            onClick = { startDownload() }
+                                        ) {
+                                            Text("重试")
                                         }
                                     }
                                 }
                             }
                         }
                     }
+
+                    // 底部间距
+                    item {
+                        Spacer(modifier = Modifier.height(20.dp))
+                    }
                 }
             }
+        }
+
+        // 悬浮返回按钮放在最后，确保在最上层
+        IconButton(
+            onClick = { navigator.pop() },
+            modifier = Modifier
+                .padding(top = 50.dp, start = 12.dp)
+                .size(44.dp)
+        ) {
+            Icon(
+                imageVector = MiuixIcons.Back,
+                contentDescription = "返回",
+                tint = MiuixTheme.colorScheme.onBackground
+            )
         }
     }
 }
@@ -620,4 +682,45 @@ fun TagChip(tag: String) {
             color = MiuixTheme.colorScheme.onSecondaryContainer
         )
     }
+}
+
+@Composable
+fun DotAnimation(
+    delayMillis: Int
+) {
+    val infiniteTransition = rememberInfiniteTransition(label = "dot")
+
+    val scale by infiniteTransition.animateFloat(
+        initialValue = 0.5f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(600, easing = androidx.compose.animation.core.EaseInOutCubic)
+        ),
+        label = "scale"
+    )
+
+    val alpha by infiniteTransition.animateFloat(
+        initialValue = 0.5f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(600, easing = androidx.compose.animation.core.EaseInOutCubic)
+        ),
+        label = "alpha"
+    )
+
+    LaunchedEffect(Unit) {
+        kotlinx.coroutines.delay(delayMillis.toLong())
+    }
+
+    Box(
+        modifier = Modifier
+            .size(12.dp)
+            .graphicsLayer {
+                this.scaleX = scale
+                this.scaleY = scale
+                this.alpha = alpha
+            }
+            .clip(RoundedCornerShape(50))
+            .background(MiuixTheme.colorScheme.primary)
+    )
 }
