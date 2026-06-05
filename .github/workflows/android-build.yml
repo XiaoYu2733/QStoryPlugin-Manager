@@ -18,11 +18,6 @@ jobs:
           submodules: true
           fetch-depth: 0
 
-      # 配置 submodules
-      - name: Config submodules
-        run: |
-          git submodule foreach git submodule update --init --recursive
-
       # 配置 jdk
       - name: Setup Java JDK
         uses: actions/setup-java@v5.0.0
@@ -38,24 +33,16 @@ jobs:
       - name: Grant execute permission to gradlew
         run: chmod +x ./gradlew
 
-      # 解码签名到工作环境, 生成在./下, 生成命令: certutil -encode .\keystore.jks encoded.txt
-      - name: Decode keystore
-        run: echo "${{ secrets.SIGN_KEYSTORE_BASE64 }}" | base64 --decode > keystore.jks
-
       # 构建 签名apk
       - name: Build APK
         run: |
-          ./gradlew :app:assembleDevelopRelease
-        env:
-          KEYSTORE_PATH: "../keystore.jks"
-          KEYSTORE_PASSWORD: ${{ secrets.SIGN_KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.SIGN_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.SIGN_KEY_PASSWORD }}
+          ./gradlew :app:assembleDbeug
+
 
       # 上次 签名apk
       - name: Upload APK
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v7
         with:
-          name: QStory-Signed.apk
-          path: ./app/build/outputs/apk/develop/release/*.apk
+          name: App-unsign.apk
+          path: ./app/build/outputs/apk/release/*.apk
           retention-days: 1
