@@ -31,7 +31,7 @@ android {
     buildTypes {
         release {
             signingConfig = signingConfigs.getByName("release")
-            isMinifyEnabled = true
+            isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -55,6 +55,9 @@ android {
     composeOptions {
         kotlinCompilerVersion = "2.1.0"
     }
+
+    // 禁用 AAB，只生成 APK
+    dependenciesInfo.includeInApk = false
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
