@@ -63,3 +63,28 @@
     public static **[] values();
     public static ** valueOf(java.lang.String);
 }
+
+# Kotlin Serialization
+-keepattributes *Annotation*
+-keepclassmembers class hai.qstory.plugin.manager.** {
+    public <init>(...);
+}
+
+# Kotlinx Serialization
+-keep class kotlinx.serialization.internal.** { *; }
+-keep class kotlinx.serialization.** { *; }
+-dontwarn kotlinx.serialization.**
+
+# Navigation3
+-keep class androidx.navigation3.** { *; }
+-keep class hai.qstory.plugin.manager.Route { *; }
+-keep class hai.qstory.plugin.manager.Route$** { *; }
+
+# Compose
+-keep class androidx.compose.** { *; }
+-keep class kotlin.Metadata { *; }
+
+# Keep data classes
+-keepclassmembers class hai.qstory.plugin.manager.data.** {
+    public <init>(...);
+}
