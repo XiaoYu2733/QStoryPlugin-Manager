@@ -58,6 +58,13 @@ android {
 
     // 禁用 AAB，只生成 APK
     dependenciesInfo.includeInApk = false
+
+    // 禁用 bundle 工具生成 apks
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
+    }
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
@@ -83,4 +90,7 @@ dependencies {
     implementation(libs.retrofit.gson)
     implementation(libs.okhttp)
     implementation(libs.gson)
+
+    // Image loading
+    implementation(libs.coil.compose)
 }

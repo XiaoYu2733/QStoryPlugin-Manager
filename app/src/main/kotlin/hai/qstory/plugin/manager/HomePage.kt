@@ -42,6 +42,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import hai.qstory.plugin.manager.data.OnlinePluginInfo
 import hai.qstory.plugin.manager.manager.PluginDownloadManager
 import hai.qstory.plugin.manager.network.RetrofitClient
@@ -475,19 +477,46 @@ fun PluginDetailPage(
                             Column(
                                 modifier = Modifier.padding(20.dp)
                             ) {
-                                // 脚本名称和版本
-                                Column {
-                                    Text(
-                                        text = plugin!!.pluginInfo.name,
-                                        style = MiuixTheme.textStyles.body1.copy(fontSize = 24.sp),
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                    Spacer(modifier = Modifier.height(4.dp))
-                                    Text(
-                                        text = "v${plugin!!.pluginInfo.version}",
-                                        style = MiuixTheme.textStyles.body2,
-                                        color = MiuixTheme.colorScheme.onSurfaceSecondary
-                                    )
+                                // 脚本图标和名称
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    // 显示脚本图标
+                                    val images = plugin!!.pluginInfo.images
+                                    val iconUrl = images?.let {
+                                        if (it.iconStatus == 1 && !it.iconFilename.isNullOrEmpty()) {
+                                            "https://plugin.suzhelan.top/api/plugin/images/${plugin!!.cloudId}/${it.iconFilename}"
+                                        } else null
+                                    }
+
+                                    if (iconUrl != null) {
+                                        AsyncImage(
+                                            model = ImageRequest.Builder(LocalContext.current)
+                                                .data(iconUrl)
+                                                .crossfade(true)
+                                                .build(),
+                                            contentDescription = "脚本图标",
+                                            modifier = Modifier
+                                                .size(64.dp)
+                                                .clip(RoundedCornerShape(16.dp))
+                                        )
+                                        Spacer(modifier = Modifier.width(16.dp))
+                                    }
+
+                                    // 脚本名称和版本
+                                    Column {
+                                        Text(
+                                            text = plugin!!.pluginInfo.name,
+                                            style = MiuixTheme.textStyles.body1.copy(fontSize = 24.sp),
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                        Spacer(modifier = Modifier.height(4.dp))
+                                        Text(
+                                            text = "v${plugin!!.pluginInfo.version}",
+                                            style = MiuixTheme.textStyles.body2,
+                                            color = MiuixTheme.colorScheme.onSurfaceSecondary
+                                        )
+                                    }
                                 }
 
                                 Spacer(modifier = Modifier.height(20.dp))
@@ -555,6 +584,46 @@ fun PluginDetailPage(
                                     ) {
                                         plugin!!.pluginInfo.tags.forEach { tag ->
                                             TagChip(tag = tag)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // 预览图卡片
+                    val images = plugin!!.pluginInfo.images
+                    if (images?.previewStatus == 1 && !images.previewFilename.isNullOrEmpty()) {
+                        item {
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 20.dp, vertical = 8.dp)
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(18.dp)
+                                ) {
+                                    Text(
+                                        text = "预览图",
+                                        style = MiuixTheme.textStyles.body2,
+                                        color = MiuixTheme.colorScheme.onSurfaceSecondary
+                                    )
+                                    Spacer(modifier = Modifier.height(10.dp))
+                                    Column(
+                                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                                    ) {
+                                        images.previewFilename.forEach { filename ->
+                                            val previewUrl = "https://plugin.suzhelan.top/api/plugin/images/${plugin!!.cloudId}/$filename"
+                                            AsyncImage(
+                                                model = ImageRequest.Builder(LocalContext.current)
+                                                    .data(previewUrl)
+                                                    .crossfade(true)
+                                                    .build(),
+                                                contentDescription = "预览图",
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .clip(RoundedCornerShape(12.dp))
+                                            )
                                         }
                                     }
                                 }

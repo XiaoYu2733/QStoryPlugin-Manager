@@ -40,6 +40,21 @@ data class OnlinePluginInfo(
         @SerializedName("tags")
         val tags: List<String>,
         @SerializedName("version")
-        val version: String
-    )
+        val version: String,
+        @SerializedName("images")
+        val images: Images? = null
+    ) {
+        data class Images(
+            @SerializedName("cloudId")
+            val cloudId: String,
+            @SerializedName("iconFilename")
+            val iconFilename: String?,
+            @SerializedName("iconStatus")
+            val iconStatus: Int,
+            @SerializedName("previewFilename")
+            val previewFilename: List<String>?,
+            @SerializedName("previewStatus")
+            val previewStatus: Int
+        )
+    }
 }
