@@ -68,11 +68,12 @@ fun App(
             }
         }
 
-        val pagerState = rememberPagerState(pageCount = { 2 })
+        val pagerState = rememberPagerState(pageCount = { 3 })
 
         val navigationItems = remember {
             listOf(
                 NavigationItem("主页", MiuixIcons.Info),
+                NavigationItem("关于", MiuixIcons.Info),
                 NavigationItem("设置", MiuixIcons.Settings),
             )
         }
@@ -110,7 +111,8 @@ fun App(
                             0 -> HomePage(
                                 navigator = navigator
                             )
-                            1 -> SettingsPage(
+                            1 -> AboutPage()
+                            2 -> SettingsPage(
                                 colorMode = colorMode,
                                 onColorModeChange = onColorModeChange
                             )
