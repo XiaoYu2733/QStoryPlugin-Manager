@@ -22,6 +22,7 @@ import top.yukonga.miuix.kmp.basic.NavigationItem
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.TopAppBar
 import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.extended.FavoritesFill
 import top.yukonga.miuix.kmp.icon.extended.Info
 import top.yukonga.miuix.kmp.icon.extended.Settings
 import top.yukonga.miuix.kmp.icon.extended.Back
@@ -72,7 +73,7 @@ fun App(
 
         val navigationItems = remember {
             listOf(
-                NavigationItem("主页", MiuixIcons.Info),
+                NavigationItem("主页", MiuixIcons.FavoritesFill),
                 NavigationItem("关于", MiuixIcons.Info),
                 NavigationItem("设置", MiuixIcons.Settings),
             )
