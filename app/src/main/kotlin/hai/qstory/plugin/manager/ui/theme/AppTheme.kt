@@ -9,12 +9,22 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.view.WindowInsetsControllerCompat
 import com.materialkolor.dynamiccolor.ColorSpec
+import hai.qstory.plugin.manager.LocalColorMode
 import top.yukonga.miuix.kmp.theme.ColorSchemeMode
 import top.yukonga.miuix.kmp.theme.LocalContentColor
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.ThemeColorSpec
 import top.yukonga.miuix.kmp.theme.ThemeController
 import top.yukonga.miuix.kmp.theme.ThemePaletteStyle
+
+@Composable
+fun isInDarkTheme(): Boolean {
+    return when (LocalColorMode.current) {
+        1, 4 -> false  // Force light mode
+        2, 5, 6 -> true   // Force dark mode
+        else -> isSystemInDarkTheme()  // Follow system (0 or default)
+    }
+}
 
 @Composable
 fun AppTheme(
