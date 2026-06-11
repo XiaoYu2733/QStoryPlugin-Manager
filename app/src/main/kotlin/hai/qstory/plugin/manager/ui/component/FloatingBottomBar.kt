@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -163,6 +164,7 @@ fun RowScope.FloatingBottomBarItem(
             )
             .fillMaxHeight()
             .weight(1f)
+            .defaultMinSize(minWidth = 76.dp)
             .graphicsLayer {
                 val scale = scale()
                 scaleX = scale
