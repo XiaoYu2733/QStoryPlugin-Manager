@@ -1,7 +1,7 @@
 plugins {
-    alias(libs.plugins.android.application)
-    alias(libs.plugins.jetbrains.kotlin.android)
-    alias(libs.plugins.jetbrains.compose.compiler)
+    id("com.android.application") version "8.13.2"
+    id("org.jetbrains.kotlin.android") version "2.1.0"
+    id("org.jetbrains.kotlin.plugin.compose") version "2.1.0"
     kotlin("plugin.serialization") version "2.1.0"
 }
 
@@ -76,21 +76,25 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
 }
 
 dependencies {
-    implementation(libs.miuix)
-    implementation(libs.miuix.icons)
-    implementation(libs.miuix.preference)
-    implementation(libs.miuix.navigation)
-    implementation(libs.androidx.navigation3.runtime)
-    implementation(libs.kotlinx.serialization.json)
-    implementation(libs.androidx.activity.compose)
-    implementation(libs.androidx.compose.foundation)
+    implementation(platform("androidx.compose:compose-bom:2024.12.01"))
+
+    // MIUIx
+    implementation("top.yukonga.miuix.kmp:miuix-ui-android:0.9.2")
+    implementation("top.yukonga.miuix.kmp:miuix-icons:0.9.2")
+    implementation("top.yukonga.miuix.kmp:miuix-preference:0.9.2")
+    implementation("top.yukonga.miuix.kmp:miuix-navigation3-ui:0.9.2")
+
+    implementation("androidx.navigation3:navigation3-runtime:1.1.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
+    implementation("androidx.activity:activity-compose:1.9.3")
+    implementation("androidx.compose.foundation:foundation")
 
     // Network
-    implementation(libs.retrofit)
-    implementation(libs.retrofit.gson)
-    implementation(libs.okhttp)
-    implementation(libs.gson)
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("com.google.code.gson:gson:2.10.1")
 
     // Image loading
-    implementation(libs.coil.compose)
+    implementation("io.coil-kt:coil-compose:2.7.0")
 }
