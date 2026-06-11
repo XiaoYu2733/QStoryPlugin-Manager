@@ -1,9 +1,12 @@
 package hai.qstory.plugin.manager
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -12,19 +15,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
-import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.NavigationBar
 import top.yukonga.miuix.kmp.basic.NavigationBarItem
 import top.yukonga.miuix.kmp.basic.NavigationItem
 import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.basic.TopAppBar
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.FavoritesFill
 import top.yukonga.miuix.kmp.icon.extended.Info
 import top.yukonga.miuix.kmp.icon.extended.Settings
-import top.yukonga.miuix.kmp.icon.extended.Back
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.navigation3.runtime.NavKey
@@ -39,7 +40,6 @@ fun App(
     enableFloatingBottomBar: Boolean = false,
     enableFloatingBottomBarBlur: Boolean = false,
     pageScale: Float = 1.0f,
-    onSettingsChanged: () -> Unit = {},
 ) {
     AppTheme(appSettings = appSettings) {
         val coroutineScope = rememberCoroutineScope()
@@ -59,10 +59,6 @@ fun App(
                     if (navStack.size > 1) {
                         navStack.removeLast()
                         currentRoute = navStack.last()
-                        // Refresh settings when returning from ColorPalette
-                        if (navStack.last() == Route.Main) {
-                            onSettingsChanged()
-                        }
                     }
                 }
                 override fun current() = currentRoute
@@ -79,24 +75,52 @@ fun App(
             )
         }
 
-        // Main navigation handling
         Scaffold(
             modifier = Modifier.fillMaxSize(),
             topBar = { null },
             bottomBar = {
                 if (navigator.current() == Route.Main) {
-                    NavigationBar {
-                        navigationItems.forEachIndexed { index, item ->
-                            NavigationBarItem(
-                                selected = pagerState.currentPage == index,
-                                onClick = {
-                                    coroutineScope.launch {
-                                        pagerState.animateScrollToPage(index)
-                                    }
-                                },
-                                icon = item.icon,
-                                label = item.label,
-                            )
+                    if (enableFloatingBottomBar) {
+                        Box(
+                            modifier = Modifier
+                                .padding(horizontal = 24.dp, vertical = 12.dp)
+                                .clip(RoundedCornerShape(20.dp))
+                                .background(
+                                    if (enableFloatingBottomBarBlur)
+                                        MiuixTheme.colorScheme.surface.copy(alpha = 0.7f)
+                                    else
+                                        MiuixTheme.colorScheme.surface
+                                )
+                        ) {
+                            NavigationBar {
+                                navigationItems.forEachIndexed { index, item ->
+                                    NavigationBarItem(
+                                        selected = pagerState.currentPage == index,
+                                        onClick = {
+                                            coroutineScope.launch {
+                                                pagerState.animateScrollToPage(index)
+                                            }
+                                        },
+                                        icon = item.icon,
+                                        label = item.label,
+                                    )
+                                }
+                            }
+                        }
+                    } else {
+                        NavigationBar {
+                            navigationItems.forEachIndexed { index, item ->
+                                NavigationBarItem(
+                                    selected = pagerState.currentPage == index,
+                                    onClick = {
+                                        coroutineScope.launch {
+                                            pagerState.animateScrollToPage(index)
+                                        }
+                                    },
+                                    icon = item.icon,
+                                    label = item.label,
+                                )
+                            }
                         }
                     }
                 }

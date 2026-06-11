@@ -14,6 +14,14 @@ object PreferencesManager {
         prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
     }
 
+    fun registerListener(listener: SharedPreferences.OnSharedPreferenceChangeListener) {
+        prefs.registerOnSharedPreferenceChangeListener(listener)
+    }
+
+    fun unregisterListener(listener: SharedPreferences.OnSharedPreferenceChangeListener) {
+        prefs.unregisterOnSharedPreferenceChangeListener(listener)
+    }
+
     var colorMode: Int
         get() = prefs.getInt("color_mode", ColorMode.SYSTEM.value)
         set(value) = prefs.edit().putInt("color_mode", value).apply()

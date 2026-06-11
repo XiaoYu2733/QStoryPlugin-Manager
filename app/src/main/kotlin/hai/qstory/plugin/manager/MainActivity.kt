@@ -1,5 +1,6 @@
 package hai.qstory.plugin.manager
 
+import android.content.SharedPreferences
 import android.graphics.Color
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -7,7 +8,6 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -48,6 +48,26 @@ class MainActivity : ComponentActivity() {
             var enablePredictiveBack by remember { mutableStateOf(PreferencesManager.enablePredictiveBack) }
             var pageScale by remember { mutableFloatStateOf(PreferencesManager.pageScale) }
 
+            // Reactive listener: updates state whenever prefs change (e.g. from ColorPaletteScreen)
+            DisposableEffect(Unit) {
+                val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, _ ->
+                    colorModeValue = PreferencesManager.colorMode
+                    miuixMonet = PreferencesManager.miuixMonet
+                    keyColor = PreferencesManager.keyColor
+                    colorStyleStr = PreferencesManager.colorStyle
+                    colorSpecStr = PreferencesManager.colorSpec
+                    enableBlur = PreferencesManager.enableBlur
+                    enableFloatingBottomBar = PreferencesManager.enableFloatingBottomBar
+                    enableFloatingBottomBarBlur = PreferencesManager.enableFloatingBottomBarBlur
+                    enablePredictiveBack = PreferencesManager.enablePredictiveBack
+                    pageScale = PreferencesManager.pageScale
+                }
+                PreferencesManager.registerListener(listener)
+                onDispose {
+                    PreferencesManager.unregisterListener(listener)
+                }
+            }
+
             val colorMode = ColorMode.fromValue(colorModeValue)
             val paletteStyle = try {
                 PaletteStyle.valueOf(colorStyleStr)
@@ -78,20 +98,6 @@ class MainActivity : ComponentActivity() {
                 Density(systemDensity.density * pageScale, systemDensity.fontScale)
             }
 
-            // Refresh state from prefs when returning from ColorPaletteScreen
-            val refreshSettings: () -> Unit = {
-                colorModeValue = PreferencesManager.colorMode
-                miuixMonet = PreferencesManager.miuixMonet
-                keyColor = PreferencesManager.keyColor
-                colorStyleStr = PreferencesManager.colorStyle
-                colorSpecStr = PreferencesManager.colorSpec
-                enableBlur = PreferencesManager.enableBlur
-                enableFloatingBottomBar = PreferencesManager.enableFloatingBottomBar
-                enableFloatingBottomBarBlur = PreferencesManager.enableFloatingBottomBarBlur
-                enablePredictiveBack = PreferencesManager.enablePredictiveBack
-                pageScale = PreferencesManager.pageScale
-            }
-
             CompositionLocalProvider(
                 LocalDensity provides density,
                 LocalColorMode provides colorModeValue,
@@ -105,7 +111,6 @@ class MainActivity : ComponentActivity() {
                     enableFloatingBottomBar = enableFloatingBottomBar,
                     enableFloatingBottomBarBlur = enableFloatingBottomBarBlur,
                     pageScale = pageScale,
-                    onSettingsChanged = refreshSettings,
                 )
             }
         }
