@@ -13,4 +13,7 @@ sealed interface Route : NavKey {
 
     @Serializable
     data class PluginDetail(val cloudId: String) : Route
+
+    @Serializable
+    data object ColorPalette : Route
 }

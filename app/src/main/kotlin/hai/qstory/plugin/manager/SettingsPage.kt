@@ -9,18 +9,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.SmallTitle
-import top.yukonga.miuix.kmp.preference.RadioButtonPreference
+import top.yukonga.miuix.kmp.preference.ArrowPreference
 
 @Composable
 fun SettingsPage(
-    colorMode: Int = 0,
-    onColorModeChange: (Int) -> Unit = {}
+    navigator: AppNavigator,
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize()
     ) {
         item {
-            SmallTitle(text = "主题模式")
+            SmallTitle(text = "外观")
         }
         item {
             Card(
@@ -29,20 +28,10 @@ fun SettingsPage(
                     .padding(bottom = 12.dp)
             ) {
                 Column {
-                    RadioButtonPreference(
-                        title = "跟随系统",
-                        selected = colorMode == 0,
-                        onClick = { onColorModeChange(0) }
-                    )
-                    RadioButtonPreference(
-                        title = "浅色模式",
-                        selected = colorMode == 1,
-                        onClick = { onColorModeChange(1) }
-                    )
-                    RadioButtonPreference(
-                        title = "深色模式",
-                        selected = colorMode == 2,
-                        onClick = { onColorModeChange(2) }
+                    ArrowPreference(
+                        title = "界面风格",
+                        summary = "调整主题模式、强调色、模糊效果等",
+                        onClick = { navigator.push(Route.ColorPalette) }
                     )
                 }
             }

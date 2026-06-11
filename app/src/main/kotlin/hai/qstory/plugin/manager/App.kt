@@ -2,7 +2,6 @@ package hai.qstory.plugin.manager
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
@@ -27,25 +26,22 @@ import top.yukonga.miuix.kmp.icon.extended.Info
 import top.yukonga.miuix.kmp.icon.extended.Settings
 import top.yukonga.miuix.kmp.icon.extended.Back
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.theme.ThemeController
-import top.yukonga.miuix.kmp.theme.ColorSchemeMode
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.navigation3.runtime.NavKey
+import hai.qstory.plugin.manager.ui.screen.ColorPaletteScreen
+import hai.qstory.plugin.manager.ui.theme.AppSettings
+import hai.qstory.plugin.manager.ui.theme.AppTheme
 
 @Composable
 fun App(
-    colorMode: Int = 0,
-    onColorModeChange: (Int) -> Unit = {}
+    appSettings: AppSettings,
+    enableBlur: Boolean = false,
+    enableFloatingBottomBar: Boolean = false,
+    enableFloatingBottomBarBlur: Boolean = false,
+    pageScale: Float = 1.0f,
+    onSettingsChanged: () -> Unit = {},
 ) {
-    val themeController = remember(colorMode) {
-        when (colorMode) {
-            1 -> ThemeController(ColorSchemeMode.Light)
-            2 -> ThemeController(ColorSchemeMode.Dark)
-            else -> ThemeController(ColorSchemeMode.System)
-        }
-    }
-
-    MiuixTheme(controller = themeController) {
+    AppTheme(appSettings = appSettings) {
         val coroutineScope = rememberCoroutineScope()
 
         // Navigation stack
@@ -63,6 +59,10 @@ fun App(
                     if (navStack.size > 1) {
                         navStack.removeLast()
                         currentRoute = navStack.last()
+                        // Refresh settings when returning from ColorPalette
+                        if (navStack.last() == Route.Main) {
+                            onSettingsChanged()
+                        }
                     }
                 }
                 override fun current() = currentRoute
@@ -114,8 +114,7 @@ fun App(
                             )
                             1 -> AboutPage()
                             2 -> SettingsPage(
-                                colorMode = colorMode,
-                                onColorModeChange = onColorModeChange
+                                navigator = navigator,
                             )
                         }
                     }
@@ -124,6 +123,11 @@ fun App(
                     PluginDetailPage(
                         cloudId = (route as Route.PluginDetail).cloudId,
                         navigator = navigator
+                    )
+                }
+                is Route.ColorPalette -> {
+                    ColorPaletteScreen(
+                        onBack = { navigator.pop() }
                     )
                 }
             }

@@ -83,11 +83,13 @@ dependencies {
     implementation("top.yukonga.miuix.kmp:miuix-icons:0.9.2")
     implementation("top.yukonga.miuix.kmp:miuix-preference:0.9.2")
     implementation("top.yukonga.miuix.kmp:miuix-navigation3-ui:0.9.2")
+    implementation("top.yukonga.miuix.kmp:miuix-blur:0.9.2")
 
     implementation("androidx.navigation3:navigation3-runtime:1.1.2")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
     implementation("androidx.activity:activity-compose:1.9.3")
     implementation("androidx.compose.foundation:foundation")
+    implementation("androidx.compose.material:material-icons-extended")
 
     // Network
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
@@ -97,4 +99,7 @@ dependencies {
 
     // Image loading
     implementation("io.coil-kt:coil-compose:2.7.0")
+
+    // Theme
+    implementation("com.materialkolor:material-kolor:4.1.1")
 }
