@@ -1,15 +1,14 @@
 package hai.qstory.plugin.manager
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.preference.RadioButtonPreference
 
 @Composable
@@ -21,8 +20,13 @@ fun SettingsPage(
         modifier = Modifier.fillMaxSize()
     ) {
         item {
+            SmallTitle(text = "主题模式")
+        }
+        item {
             Card(
-                modifier = Modifier.padding(12.dp)
+                modifier = Modifier
+                    .padding(horizontal = 12.dp)
+                    .padding(bottom = 12.dp)
             ) {
                 Column {
                     RadioButtonPreference(
@@ -42,9 +46,6 @@ fun SettingsPage(
                     )
                 }
             }
-        }
-        item {
-            Spacer(modifier = Modifier.height(12.dp))
         }
     }
 }

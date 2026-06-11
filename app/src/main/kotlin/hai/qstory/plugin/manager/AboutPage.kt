@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -26,7 +27,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
@@ -36,8 +36,10 @@ import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Icon
+import top.yukonga.miuix.kmp.basic.SmallTitle
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.utils.PressFeedbackType
 import java.net.URL
 
 data class GitHubUser(
@@ -76,9 +78,7 @@ fun AboutPage() {
 
     LaunchedEffect(Unit) {
         withContext(Dispatchers.IO) {
-            // 获取开发者
             developer = fetchGitHubUser("XiaoYu2733")
-            // 获取特别鸣谢
             thanksUsers = listOf("HdShare", "suzhelan").mapNotNull { fetchGitHubUser(it) }
         }
     }
@@ -88,86 +88,73 @@ fun AboutPage() {
     LazyColumn(
         modifier = Modifier.fillMaxSize()
     ) {
-        // GitHub 开发者卡片
+        // 开发者
         if (user != null) {
+            item {
+                SmallTitle(text = "开发者")
+            }
             item {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(12.dp)
-                        .clickable {
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(user.htmlUrl))
-                            context.startActivity(intent)
-                        }
+                        .padding(horizontal = 12.dp)
+                        .padding(bottom = 12.dp),
+                    insideMargin = PaddingValues(16.dp),
+                    pressFeedbackType = PressFeedbackType.Sink,
+                    showIndication = true,
+                    onClick = {
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(user.htmlUrl))
+                        context.startActivity(intent)
+                    }
                 ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(
-                            text = "开发者",
-                            style = MiuixTheme.textStyles.body2,
-                            color = MiuixTheme.colorScheme.onSurfaceSecondary
+                        AsyncImage(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(user.avatarUrl)
+                                .crossfade(true)
+                                .build(),
+                            contentDescription = "GitHub 头像",
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .size(48.dp)
+                                .clip(RoundedCornerShape(24.dp))
                         )
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            AsyncImage(
-                                model = ImageRequest.Builder(LocalContext.current)
-                                    .data(user.avatarUrl)
-                                    .crossfade(true)
-                                    .build(),
-                                contentDescription = "GitHub 头像",
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier
-                                    .size(48.dp)
-                                    .clip(RoundedCornerShape(24.dp))
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text(
+                                text = user.login,
+                                style = MiuixTheme.textStyles.body1,
+                                fontWeight = FontWeight.Medium
                             )
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column {
+                            if (user.name.isNotEmpty() && user.name != user.login) {
                                 Text(
-                                    text = user.login,
-                                    style = MiuixTheme.textStyles.body1,
-                                    fontWeight = FontWeight.Bold
+                                    text = user.name,
+                                    style = MiuixTheme.textStyles.body2,
+                                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary
                                 )
-                                if (user.name.isNotEmpty() && user.name != user.login) {
-                                    Text(
-                                        text = user.name,
-                                        style = MiuixTheme.textStyles.body2,
-                                        color = MiuixTheme.colorScheme.onSurfaceSecondary
-                                    )
-                                }
                             }
                         }
                     }
                 }
             }
-            item {
-                Spacer(modifier = Modifier.height(12.dp))
-            }
         }
 
-        // 特别鸣谢卡片
+        // 特别鸣谢
         if (thanksUsers.isNotEmpty()) {
+            item {
+                SmallTitle(text = "特别鸣谢")
+            }
             item {
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(12.dp)
+                        .padding(horizontal = 12.dp)
+                        .padding(bottom = 12.dp),
+                    insideMargin = PaddingValues(16.dp),
                 ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp)
-                    ) {
-                        Text(
-                            text = "特别鸣谢",
-                            style = MiuixTheme.textStyles.body2,
-                            color = MiuixTheme.colorScheme.onSurfaceSecondary
-                        )
-                        Spacer(modifier = Modifier.height(12.dp))
+                    Column {
                         thanksUsers.forEach { u ->
                             Row(
                                 modifier = Modifier
@@ -195,13 +182,13 @@ fun AboutPage() {
                                     Text(
                                         text = u.login,
                                         style = MiuixTheme.textStyles.body2,
-                                        fontWeight = FontWeight.Bold
+                                        fontWeight = FontWeight.Medium
                                     )
                                     if (u.name.isNotEmpty() && u.name != u.login) {
                                         Text(
                                             text = u.name,
                                             style = MiuixTheme.textStyles.body2,
-                                            color = MiuixTheme.colorScheme.onSurfaceSecondary
+                                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary
                                         )
                                     }
                                 }
@@ -210,25 +197,25 @@ fun AboutPage() {
                     }
                 }
             }
-            item {
-                Spacer(modifier = Modifier.height(12.dp))
-            }
         }
 
+        // 查看源码
         item {
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 12.dp)
-                    .clickable {
-                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(githubUrl))
-                        context.startActivity(intent)
-                    }
+                    .padding(bottom = 12.dp),
+                insideMargin = PaddingValues(16.dp),
+                pressFeedbackType = PressFeedbackType.Sink,
+                showIndication = true,
+                onClick = {
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(githubUrl))
+                    context.startActivity(intent)
+                }
             ) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -246,23 +233,24 @@ fun AboutPage() {
                 }
             }
         }
-        item {
-            Spacer(modifier = Modifier.height(12.dp))
-        }
+
+        // Telegram 群组
         item {
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 12.dp)
-                    .clickable {
-                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/XiaoYu_Chat"))
-                        context.startActivity(intent)
-                    }
+                    .padding(bottom = 12.dp),
+                insideMargin = PaddingValues(16.dp),
+                pressFeedbackType = PressFeedbackType.Sink,
+                showIndication = true,
+                onClick = {
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/XiaoYu_Chat"))
+                    context.startActivity(intent)
+                }
             ) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -280,6 +268,7 @@ fun AboutPage() {
                 }
             }
         }
+
         item {
             Spacer(modifier = Modifier.height(12.dp))
         }
