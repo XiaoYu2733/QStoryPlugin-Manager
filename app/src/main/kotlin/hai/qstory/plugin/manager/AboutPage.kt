@@ -27,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
@@ -88,6 +89,76 @@ fun AboutPage() {
     LazyColumn(
         modifier = Modifier.fillMaxSize()
     ) {
+        // 查看源码
+        item {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp)
+                    .padding(top = 12.dp, bottom = 12.dp),
+                insideMargin = PaddingValues(16.dp),
+                pressFeedbackType = PressFeedbackType.Sink,
+                showIndication = true,
+                onClick = {
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(githubUrl))
+                    context.startActivity(intent)
+                }
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_github),
+                        contentDescription = "GitHub",
+                        tint = MiuixTheme.colorScheme.onBackground,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "查看源码",
+                        style = MiuixTheme.textStyles.body1
+                    )
+                }
+            }
+        }
+
+        // Telegram 群组
+        item {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 12.dp)
+                    .padding(bottom = 12.dp),
+                insideMargin = PaddingValues(16.dp),
+                pressFeedbackType = PressFeedbackType.Sink,
+                showIndication = true,
+                onClick = {
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/XiaoYu_Chat"))
+                    context.startActivity(intent)
+                }
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_telegram),
+                        contentDescription = "Telegram",
+                        tint = MiuixTheme.colorScheme.onBackground,
+                        modifier = Modifier.size(24.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "Telegram 群组",
+                        style = MiuixTheme.textStyles.body1
+                    )
+                }
+            }
+        }
+
         // 开发者
         if (user != null) {
             item {
@@ -195,76 +266,6 @@ fun AboutPage() {
                             }
                         }
                     }
-                }
-            }
-        }
-
-        // 查看源码
-        item {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 12.dp)
-                    .padding(bottom = 12.dp),
-                insideMargin = PaddingValues(16.dp),
-                pressFeedbackType = PressFeedbackType.Sink,
-                showIndication = true,
-                onClick = {
-                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(githubUrl))
-                    context.startActivity(intent)
-                }
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_github),
-                        contentDescription = "GitHub",
-                        tint = MiuixTheme.colorScheme.onBackground,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "查看源码",
-                        style = MiuixTheme.textStyles.body1
-                    )
-                }
-            }
-        }
-
-        // Telegram 群组
-        item {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 12.dp)
-                    .padding(bottom = 12.dp),
-                insideMargin = PaddingValues(16.dp),
-                pressFeedbackType = PressFeedbackType.Sink,
-                showIndication = true,
-                onClick = {
-                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/XiaoYu_Chat"))
-                    context.startActivity(intent)
-                }
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_telegram),
-                        contentDescription = "Telegram",
-                        tint = MiuixTheme.colorScheme.onBackground,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Telegram 群组",
-                        style = MiuixTheme.textStyles.body1
-                    )
                 }
             }
         }
