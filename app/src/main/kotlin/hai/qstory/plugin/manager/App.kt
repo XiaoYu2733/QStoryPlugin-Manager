@@ -98,13 +98,10 @@ fun App(
                 if (navigator.current() == Route.Main) {
                     if (enableFloatingBottomBar) {
                         Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 24.dp)
+                            modifier = Modifier.fillMaxWidth()
                         ) {
                             FloatingBottomBar(
                                 modifier = Modifier
-                                    .fillMaxWidth()
                                     .align(Alignment.BottomCenter)
                                     .clickable(
                                         interactionSource = remember { MutableInteractionSource() },
@@ -169,10 +166,14 @@ fun App(
         ) { innerPadding ->
             when (val route = navigator.current()) {
                 is Route.Main -> {
+                    // When floating bar is on, content extends behind it so the
+                    // backdrop sees real content instead of Scaffold surface color.
+                    val bottomPadding = if (enableFloatingBottomBar) 0.dp
+                        else innerPadding.calculateBottomPadding()
                     HorizontalPager(
                         state = pagerState,
                         modifier = Modifier
-                            .padding(innerPadding)
+                            .padding(top = innerPadding.calculateTopPadding(), bottom = bottomPadding)
                             .then(if (enableFloatingBottomBar && enableFloatingBottomBarBlur) Modifier.layerBackdrop(backdrop) else Modifier),
                     ) { page ->
                         when (page) {
