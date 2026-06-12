@@ -2,11 +2,6 @@ package hai.qstory.plugin.manager
 
 import android.content.Context
 import android.widget.Toast
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -55,6 +50,7 @@ import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.HorizontalDivider
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
+import top.yukonga.miuix.kmp.basic.InfiniteProgressIndicator
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.basic.TopAppBar
@@ -184,27 +180,9 @@ fun HomePage(
                         .height(400.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        // 三个跳动的圆点
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            DotAnimation(delayMillis = 0)
-                            DotAnimation(delayMillis = 150)
-                            DotAnimation(delayMillis = 300)
-                        }
-
-                        Spacer(modifier = Modifier.height(24.dp))
-
-                        Text(
-                            text = "加载中...",
-                            style = MiuixTheme.textStyles.body2,
-                            color = MiuixTheme.colorScheme.onSurfaceSecondary
-                        )
-                    }
+                    InfiniteProgressIndicator(
+                        color = MiuixTheme.colorScheme.primary
+                    )
                 }
             }
         } else if (errorMessage != null) {
@@ -423,27 +401,9 @@ fun PluginDetailPage(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        // 三个跳动的圆点
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            DotAnimation(delayMillis = 0)
-                            DotAnimation(delayMillis = 150)
-                            DotAnimation(delayMillis = 300)
-                        }
-
-                        Spacer(modifier = Modifier.height(24.dp))
-
-                        Text(
-                            text = "加载中...",
-                            style = MiuixTheme.textStyles.body2,
-                            color = MiuixTheme.colorScheme.onSurfaceSecondary
-                        )
-                    }
+                    InfiniteProgressIndicator(
+                        color = MiuixTheme.colorScheme.primary
+                    )
                 }
             }
             plugin == null -> {
@@ -751,45 +711,4 @@ fun TagChip(tag: String) {
             color = MiuixTheme.colorScheme.onSecondaryContainer
         )
     }
-}
-
-@Composable
-fun DotAnimation(
-    delayMillis: Int
-) {
-    val infiniteTransition = rememberInfiniteTransition(label = "dot")
-
-    val scale by infiniteTransition.animateFloat(
-        initialValue = 0.5f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(600, easing = androidx.compose.animation.core.EaseInOutCubic)
-        ),
-        label = "scale"
-    )
-
-    val alpha by infiniteTransition.animateFloat(
-        initialValue = 0.5f,
-        targetValue = 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(600, easing = androidx.compose.animation.core.EaseInOutCubic)
-        ),
-        label = "alpha"
-    )
-
-    LaunchedEffect(Unit) {
-        kotlinx.coroutines.delay(delayMillis.toLong())
-    }
-
-    Box(
-        modifier = Modifier
-            .size(12.dp)
-            .graphicsLayer {
-                this.scaleX = scale
-                this.scaleY = scale
-                this.alpha = alpha
-            }
-            .clip(RoundedCornerShape(50))
-            .background(MiuixTheme.colorScheme.primary)
-    )
 }

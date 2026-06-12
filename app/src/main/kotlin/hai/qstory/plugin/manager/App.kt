@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.BarChart
 import androidx.compose.material.icons.rounded.Cottage
 import androidx.compose.material.icons.rounded.Extension
 import androidx.compose.material.icons.rounded.Settings
@@ -76,11 +77,12 @@ fun App(
             }
         }
 
-        val pagerState = rememberPagerState(pageCount = { 3 })
+        val pagerState = rememberPagerState(pageCount = { 4 })
 
         val navigationItems = remember {
             listOf(
                 NavigationItem("主页", Icons.Rounded.Cottage),
+                NavigationItem("统计", Icons.Rounded.BarChart),
                 NavigationItem("关于", Icons.Rounded.Extension),
                 NavigationItem("设置", Icons.Rounded.Settings),
             )
@@ -116,7 +118,7 @@ fun App(
                                     }
                                 },
                                 backdrop = backdrop,
-                                tabsCount = 3,
+                                tabsCount = 4,
                                 isBlurEnabled = enableFloatingBottomBarBlur,
                             ) {
                                 navigationItems.forEachIndexed { index, item ->
@@ -180,8 +182,9 @@ fun App(
                             0 -> HomePage(
                                 navigator = navigator
                             )
-                            1 -> AboutPage()
-                            2 -> SettingsPage(
+                            1 -> StatisticsPage()
+                            2 -> AboutPage()
+                            3 -> SettingsPage(
                                 navigator = navigator,
                             )
                         }

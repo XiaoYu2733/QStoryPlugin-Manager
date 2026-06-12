@@ -2,6 +2,7 @@ package hai.qstory.plugin.manager
 
 import android.content.SharedPreferences
 import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
@@ -31,10 +32,25 @@ val LocalEnableFloatingBottomBar = staticCompositionLocalOf { false }
 val LocalEnableFloatingBottomBarBlur = staticCompositionLocalOf { false }
 
 class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
 
+    private fun applyPredictiveBackSetting() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            val enable = PreferencesManager.enablePredictiveBack
+            runCatching {
+                val method = android.content.pm.ApplicationInfo::class.java
+                    .getDeclaredMethod("setEnableOnBackInvokedCallback", Boolean::class.javaPrimitiveType)
+                method.isAccessible = true
+                method.invoke(applicationInfo, enable)
+            }
+        }
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        // Must init prefs and disable predictive back before super.onCreate(),
+        // because Android 15+ forces it on by default at targetSdk 35+.
         PreferencesManager.init(applicationContext)
+        applyPredictiveBackSetting()
+        super.onCreate(savedInstanceState)
 
         setContent {
             var colorModeValue by remember { mutableIntStateOf(PreferencesManager.colorMode) }

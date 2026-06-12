@@ -58,3 +58,65 @@ data class OnlinePluginInfo(
         )
     }
 }
+
+// ── Statistics API models ──
+
+data class PlatformStatistics(
+    val scripts: ScriptStats,
+    val audits: AuditStats,
+    val downloads: DownloadStats,
+    val aiReviews: AiReviewStats,
+    val comments: CommentStats,
+    val users: UserStats,
+    val tags: Map<String, Int>,
+    val recentActivity: RecentActivity
+)
+
+data class ScriptStats(
+    val total: Int,
+    val online: Int,
+    val offline: Int,
+    val notPublished: Int
+)
+
+data class AuditStats(
+    val total: Int,
+    val pending: Int,
+    val approved: Int,
+    val rejected: Int
+)
+
+data class DownloadStats(
+    val total: Int
+)
+
+data class AiReviewStats(
+    val total: Int,
+    val success: Int,
+    val failed: Int,
+    val totalTokensUsed: Int,
+    val riskDistribution: RiskDistribution
+)
+
+data class RiskDistribution(
+    val low: Int,
+    val medium: Int,
+    val high: Int
+)
+
+data class CommentStats(
+    val total: Int,
+    val active: Int
+)
+
+data class UserStats(
+    val uploaders: Int,
+    val commenters: Int,
+    val blacklisted: Int
+)
+
+data class RecentActivity(
+    val todayUploads: Int,
+    val weekUploads: Int,
+    val monthUploads: Int
+)
