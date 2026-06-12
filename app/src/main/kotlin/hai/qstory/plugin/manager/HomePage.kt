@@ -29,7 +29,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Color
@@ -98,16 +97,27 @@ fun HomePage(
     }
 
     var selectedTag by remember { mutableStateOf("全部") }
+    var selectedStatus by remember { mutableStateOf("全部状态") }
     var searchText by remember { mutableStateOf("") }
     var showTagDialog by remember { mutableStateOf(false) }
+    var showStatusDialog by remember { mutableStateOf(false) }
 
-    val filteredPlugins = remember(pluginList, selectedTag, searchText) {
+    val statusOptions = listOf("全部状态", "已上架", "已下架", "待审核")
+
+    val filteredPlugins = remember(pluginList, selectedTag, selectedStatus, searchText) {
         pluginList.filter { plugin ->
             val tagMatch = if (selectedTag == "全部") {
                 true
             } else {
                 val isOfficial = selectedTag == "官方脚本" && plugin.pluginInfo.tags.contains("官方")
                 isOfficial || plugin.pluginInfo.tags.contains(selectedTag)
+            }
+
+            val statusMatch = when (selectedStatus) {
+                "已上架" -> plugin.onlineStatus == 1
+                "已下架" -> plugin.onlineStatus == 0
+                "待审核" -> plugin.auditStatus == 0
+                else -> true
             }
 
             val searchMatch = if (searchText.isBlank()) {
@@ -117,7 +127,7 @@ fun HomePage(
                         plugin.pluginInfo.author.contains(searchText, ignoreCase = true)
             }
 
-            tagMatch && searchMatch
+            tagMatch && statusMatch && searchMatch
         }
     }
 
@@ -143,12 +153,38 @@ fun HomePage(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Button(
+                        onClick = { showStatusDialog = !showStatusDialog },
+                        modifier = Modifier
+                            .height(56.dp)
+                            .width(100.dp)
+                    ) {
+                        Text(selectedStatus)
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Button(
                         onClick = { showTagDialog = !showTagDialog },
                         modifier = Modifier
                             .height(56.dp)
-                            .width(120.dp)
+                            .width(100.dp)
                     ) {
                         Text(selectedTag)
+                    }
+                }
+
+                if (showStatusDialog) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Column {
+                        statusOptions.forEach { status ->
+                            StatusOptionButton(
+                                label = status,
+                                selectedStatus = selectedStatus,
+                                onClick = {
+                                    selectedStatus = status
+                                    showStatusDialog = false
+                                }
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                        }
                     }
                 }
 
@@ -269,7 +305,12 @@ fun PluginCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
-            .clip(RoundedCornerShape(16.dp))
+            .clip(RoundedCornerShape(16.dp)),
+        pressFeedbackType = top.yukonga.miuix.kmp.utils.PressFeedbackType.Sink,
+        showIndication = true,
+        onClick = {
+            navigator.push(Route.PluginDetail(plugin.cloudId))
+        }
     ) {
         Column(
             modifier = Modifier
@@ -278,10 +319,9 @@ fun PluginCard(
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column(modifier = Modifier.weight(1f)) {
+                Column {
                     Row(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -302,19 +342,6 @@ fun PluginCard(
                         text = plugin.pluginInfo.author,
                         style = MiuixTheme.textStyles.body2,
                         color = MiuixTheme.colorScheme.onSurfaceSecondary
-                    )
-                }
-
-                IconButton(
-                    onClick = {
-                        navigator.push(Route.PluginDetail(plugin.cloudId))
-                    }
-                ) {
-                    Icon(
-                        imageVector = MiuixIcons.Back,
-                        contentDescription = "查看详情",
-                        tint = MiuixTheme.colorScheme.primary,
-                        modifier = Modifier.rotate(180f)
                     )
                 }
             }
