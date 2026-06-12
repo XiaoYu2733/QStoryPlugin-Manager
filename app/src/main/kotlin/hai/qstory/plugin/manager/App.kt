@@ -88,6 +88,7 @@ fun App(
 
         val surfaceColor = MiuixTheme.colorScheme.surface
         val backdrop = rememberLayerBackdrop {
+            drawRect(surfaceColor)
             drawContent()
         }
 
@@ -97,10 +98,13 @@ fun App(
                 if (navigator.current() == Route.Main) {
                     if (enableFloatingBottomBar) {
                         Box(
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 24.dp)
                         ) {
                             FloatingBottomBar(
                                 modifier = Modifier
+                                    .fillMaxWidth()
                                     .align(Alignment.BottomCenter)
                                     .clickable(
                                         interactionSource = remember { MutableInteractionSource() },

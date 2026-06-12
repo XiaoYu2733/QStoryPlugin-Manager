@@ -12,11 +12,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -28,6 +28,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -215,6 +216,11 @@ fun FloatingBottomBar(
 
     var currentIndex by remember(selectedIndex) { mutableIntStateOf(selectedIndex()) }
 
+    // Tracks whether currentIndex was changed by external selectedIndex sync
+    // (e.g. HorizontalPager animation) vs internal user interaction (drag/tap).
+    // Prevents feedback loop where pager animation triggers onSelected -> pager animation.
+    var isExternalChange by remember { mutableStateOf(false) }
+
     class DampedDragAnimationHolder {
         var instance: DampedDragAnimation? = null
     }
@@ -267,12 +273,20 @@ fun FloatingBottomBar(
     }
 
     LaunchedEffect(selectedIndex) {
-        snapshotFlow { selectedIndex() }.collectLatest { currentIndex = it }
+        snapshotFlow { selectedIndex() }.collectLatest { newIndex ->
+            if (currentIndex != newIndex) {
+                isExternalChange = true
+                currentIndex = newIndex
+            }
+        }
     }
     LaunchedEffect(dampedDragAnimation) {
         snapshotFlow { currentIndex }.drop(1).collectLatest { index ->
             dampedDragAnimation.animateToValue(index.toFloat())
-            onSelected(index)
+            if (!isExternalChange) {
+                onSelected(index)
+            }
+            isExternalChange = false
         }
     }
 
@@ -295,7 +309,7 @@ fun FloatingBottomBar(
     val combinedBackdrop = rememberCombinedBackdrop(backdrop, tabsBackdrop)
 
     Box(
-        modifier = modifier.width(IntrinsicSize.Min),
+        modifier = modifier.fillMaxWidth(),
         contentAlignment = Alignment.CenterStart
     ) {
         Row(
