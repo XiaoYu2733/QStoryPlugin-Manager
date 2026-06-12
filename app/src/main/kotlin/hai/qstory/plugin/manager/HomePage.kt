@@ -38,10 +38,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
-import hai.qstory.plugin.manager.data.OnlinePluginInfo
+import hai.qstory.plugin.manager.data.ScriptDetail
+import hai.qstory.plugin.manager.data.ScriptListItem
 import hai.qstory.plugin.manager.manager.PluginDownloadManager
 import hai.qstory.plugin.manager.network.RetrofitClient
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import top.yukonga.miuix.kmp.basic.Button
@@ -75,19 +79,37 @@ fun HomePage(
 ) {
     val context = LocalContext.current
     val downloadManager = remember { PluginDownloadManager(context) }
-    var pluginList by remember { mutableStateOf<List<OnlinePluginInfo>>(emptyList()) }
+    var pluginList by remember { mutableStateOf<List<ScriptListItem>>(emptyList()) }
     var isLoading by remember { mutableStateOf(true) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
         withContext(Dispatchers.IO) {
             try {
-                val response = RetrofitClient.pluginService.getOnlinePluginList()
-                if (response.isSuccess()) {
-                    pluginList = response.data ?: emptyList()
-                } else {
-                    errorMessage = response.message
+                val firstPage = RetrofitClient.pluginService.getPublicScriptList()
+                if (!firstPage.isSuccess()) {
+                    errorMessage = firstPage.message
+                    return@withContext
                 }
+                val data = firstPage.data ?: return@withContext
+                val allItems = mutableListOf<ScriptListItem>()
+                allItems.addAll(data.list)
+
+                if (data.totalPages > 1) {
+                    coroutineScope {
+                        val deferred = (2..data.totalPages).map { page ->
+                            async {
+                                RetrofitClient.pluginService.getPublicScriptList(page = page)
+                            }
+                        }
+                        deferred.awaitAll().forEach { response ->
+                            if (response.isSuccess()) {
+                                response.data?.list?.let { allItems.addAll(it) }
+                            }
+                        }
+                    }
+                }
+                pluginList = allItems
             } catch (e: Exception) {
                 errorMessage = e.message
             } finally {
@@ -109,8 +131,8 @@ fun HomePage(
             val tagMatch = if (selectedTag == "全部") {
                 true
             } else {
-                val isOfficial = selectedTag == "官方脚本" && plugin.pluginInfo.tags.contains("官方")
-                isOfficial || plugin.pluginInfo.tags.contains(selectedTag)
+                val isOfficial = selectedTag == "官方脚本" && plugin.tags.contains("官方")
+                isOfficial || plugin.tags.contains(selectedTag)
             }
 
             val statusMatch = when (selectedStatus) {
@@ -123,8 +145,8 @@ fun HomePage(
             val searchMatch = if (searchText.isBlank()) {
                 true
             } else {
-                plugin.pluginInfo.name.contains(searchText, ignoreCase = true) ||
-                        plugin.pluginInfo.author.contains(searchText, ignoreCase = true)
+                plugin.name.contains(searchText, ignoreCase = true) ||
+                        plugin.author.contains(searchText, ignoreCase = true)
             }
 
             tagMatch && statusMatch && searchMatch
@@ -320,19 +342,19 @@ fun StatusOptionButton(
     }
 }
 
-private fun getStatusLabel(plugin: OnlinePluginInfo): Pair<String, Color> {
+private fun getStatusLabel(plugin: ScriptListItem): Pair<String, Color> {
     return when {
         plugin.onlineStatus == 1 -> "已上架" to Color(0xFF4CAF50)
         plugin.onlineStatus == 0 -> "已下架" to Color(0xFFF44336)
         plugin.auditStatus == 0 -> "待审核" to Color(0xFFFF9800)
         plugin.auditStatus == 2 -> "未通过" to Color(0xFFF44336)
-        else -> "已上架" to Color(0xFF4CAF50)
+        else -> "未上线" to Color(0xFF9E9E9E)
     }
 }
 
 @Composable
 fun PluginCard(
-    plugin: OnlinePluginInfo,
+    plugin: ScriptListItem,
     navigator: AppNavigator
 ) {
     Card(
@@ -360,20 +382,20 @@ fun PluginCard(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = plugin.pluginInfo.name,
+                            text = plugin.name,
                             style = MiuixTheme.textStyles.body1,
                             fontWeight = FontWeight.Bold
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "v${plugin.pluginInfo.version}",
+                            text = "v${plugin.version}",
                             style = MiuixTheme.textStyles.body2,
                             color = MiuixTheme.colorScheme.onSurfaceSecondary
                         )
                     }
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = plugin.pluginInfo.author,
+                        text = plugin.author,
                         style = MiuixTheme.textStyles.body2,
                         color = MiuixTheme.colorScheme.onSurfaceSecondary
                     )
@@ -398,7 +420,7 @@ fun PluginDetailPage(
     val context = LocalContext.current
     val downloadManager = remember { PluginDownloadManager(context) }
     val coroutineScope = rememberCoroutineScope()
-    var plugin by remember { mutableStateOf<OnlinePluginInfo?>(null) }
+    var plugin by remember { mutableStateOf<ScriptDetail?>(null) }
     var isLoading by remember { mutableStateOf(true) }
     var downloadState by remember { mutableStateOf<DownloadState>(DownloadState.Idle) }
     var isDownloading by remember { mutableStateOf(false) }
@@ -408,9 +430,9 @@ fun PluginDetailPage(
     LaunchedEffect(cloudId) {
         withContext(Dispatchers.IO) {
             try {
-                val response = RetrofitClient.pluginService.getOnlinePluginList()
+                val response = RetrofitClient.pluginService.getPublicScriptDetail(cloudId)
                 if (response.isSuccess()) {
-                    plugin = response.data?.find { it.cloudId == cloudId }
+                    plugin = response.data
                 }
             } finally {
                 isLoading = false
@@ -436,9 +458,9 @@ fun PluginDetailPage(
 
         coroutineScope.launch(Dispatchers.IO) {
             val result = downloadManager.downloadPlugin(
-                pluginName = currentPlugin.pluginInfo.name,
+                pluginName = currentPlugin.name,
                 cloudId = currentPlugin.cloudId,
-                serverFileName = currentPlugin.pluginInfo.fileName
+                serverFileName = currentPlugin.fileName
             ) { progress ->
                 launch(Dispatchers.Main) {
                     downloadProgress = progress
@@ -451,7 +473,7 @@ fun PluginDetailPage(
                 if (result.isSuccess) {
                     downloadedFileName = result.getOrNull()
                     downloadState = DownloadState.Success
-                    Toast.makeText(context, "下载成功", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "下载成功\n${downloadManager.pluginDir.absolutePath}", Toast.LENGTH_LONG).show()
                 } else {
                     downloadState = DownloadState.Failed
                     Toast.makeText(context, "下载失败", Toast.LENGTH_SHORT).show()
@@ -510,7 +532,7 @@ fun PluginDetailPage(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     // 显示脚本图标
-                                    val images = plugin!!.pluginInfo.images
+                                    val images = plugin!!.images
                                     val iconUrl = images?.let {
                                         if (it.iconStatus == 1 && !it.iconFilename.isNullOrEmpty()) {
                                             "https://plugin.suzhelan.top/api/plugin/images/${plugin!!.cloudId}/${it.iconFilename}"
@@ -534,13 +556,13 @@ fun PluginDetailPage(
                                     // 脚本名称和版本
                                     Column {
                                         Text(
-                                            text = plugin!!.pluginInfo.name,
+                                            text = plugin!!.name,
                                             style = MiuixTheme.textStyles.body1.copy(fontSize = 24.sp),
                                             fontWeight = FontWeight.Bold
                                         )
                                         Spacer(modifier = Modifier.height(4.dp))
                                         Text(
-                                            text = "v${plugin!!.pluginInfo.version}",
+                                            text = "v${plugin!!.version}",
                                             style = MiuixTheme.textStyles.body2,
                                             color = MiuixTheme.colorScheme.onSurfaceSecondary
                                         )
@@ -551,7 +573,7 @@ fun PluginDetailPage(
 
                                 // 作者信息
                                 Text(
-                                    text = "作者: ${plugin!!.pluginInfo.author}",
+                                    text = "作者: ${plugin!!.author}",
                                     style = MiuixTheme.textStyles.body2,
                                     color = MiuixTheme.colorScheme.onSurfaceSecondary
                                 )
@@ -560,7 +582,7 @@ fun PluginDetailPage(
 
                                 // 脚本ID
                                 Text(
-                                    text = "ID: ${plugin!!.pluginInfo.pluginId}",
+                                    text = "ID: ${plugin!!.pluginId}",
                                     style = MiuixTheme.textStyles.body2,
                                     color = MiuixTheme.colorScheme.onSurfaceSecondary
                                 )
@@ -586,7 +608,7 @@ fun PluginDetailPage(
                                 Spacer(modifier = Modifier.height(10.dp))
                                 SelectionContainer {
                                     Text(
-                                        text = plugin!!.pluginInfo.description,
+                                        text = plugin!!.description,
                                         style = MiuixTheme.textStyles.body1,
                                         lineHeight = 22.sp
                                     )
@@ -596,7 +618,7 @@ fun PluginDetailPage(
                     }
 
                     // 标签卡片
-                    if (plugin!!.pluginInfo.tags.isNotEmpty()) {
+                    if (plugin!!.tags.isNotEmpty()) {
                         item {
                             Card(
                                 modifier = Modifier
@@ -610,7 +632,7 @@ fun PluginDetailPage(
                                         horizontalArrangement = Arrangement.spacedBy(10.dp),
                                         verticalArrangement = Arrangement.spacedBy(10.dp)
                                     ) {
-                                        plugin!!.pluginInfo.tags.forEach { tag ->
+                                        plugin!!.tags.forEach { tag ->
                                             TagChip(tag = tag)
                                         }
                                     }
@@ -620,7 +642,7 @@ fun PluginDetailPage(
                     }
 
                     // 预览图卡片
-                    val images = plugin!!.pluginInfo.images
+                    val images = plugin!!.images
                     if (images?.previewStatus == 1 && !images.previewFilename.isNullOrEmpty()) {
                         item {
                             Card(

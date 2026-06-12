@@ -22,11 +22,7 @@ data class OnlinePluginInfo(
     @SerializedName("pluginId")
     val pluginId: String,
     @SerializedName("pluginInfo")
-    val pluginInfo: PluginInfo,
-    @SerializedName("auditStatus")
-    val auditStatus: Int? = null,
-    @SerializedName("onlineStatus")
-    val onlineStatus: Int? = null
+    val pluginInfo: PluginInfo
 ) {
     data class PluginInfo(
         @SerializedName("author")
@@ -123,4 +119,95 @@ data class RecentActivity(
     val todayUploads: Int,
     val weekUploads: Int,
     val monthUploads: Int
+)
+
+// ── Public API models ──
+
+data class PaginatedScripts(
+    val list: List<ScriptListItem>,
+    val total: Int,
+    val page: Int,
+    val pageSize: Int,
+    val totalPages: Int
+)
+
+data class ScriptListItem(
+    val cloudId: String,
+    val pluginId: String,
+    val name: String,
+    val description: String,
+    val author: String,
+    val version: String,
+    val type: Int,
+    val tags: List<String>,
+    val auditStatus: Int,
+    val auditReason: String,
+    val processor: String,
+    val uploadedAt: String,
+    val uploadedBy: String,
+    val onlineStatus: Int,
+    val downloadCount: Int,
+    val images: Images? = null
+) {
+    data class Images(
+        val id: Int,
+        val cloudId: String,
+        val iconStatus: Int,
+        val iconFilename: String?,
+        val previewStatus: Int,
+        val previewFilename: List<String>?,
+        val createdAt: String
+    )
+}
+
+data class ScriptDetail(
+    val cloudId: String,
+    val pluginId: String,
+    val name: String,
+    val description: String,
+    val author: String,
+    val version: String,
+    val type: Int,
+    val date: String,
+    val tags: List<String>,
+    val fileName: String,
+    val fileState: Int,
+    val createdAt: String,
+    val images: ScriptDetailImages?,
+    val audit: AuditRecord?,
+    val onlinePlugin: OnlinePluginRecord?
+)
+
+data class ScriptDetailImages(
+    val id: Int,
+    val cloudId: String,
+    val iconStatus: Int,
+    val iconFilename: String?,
+    val previewStatus: Int,
+    val previewFilename: List<String>?,
+    val createdAt: String
+)
+
+data class AuditRecord(
+    val id: Int,
+    val cloudId: String,
+    val status: Int,
+    val reason: String,
+    val processor: String,
+    val uploaderUin: String,
+    val uploaderNickname: String,
+    val createdAt: String,
+    val updatedAt: String
+)
+
+data class OnlinePluginRecord(
+    val id: Int,
+    val cloudId: String,
+    val pluginId: String,
+    val downloadCount: Int,
+    val reason: String,
+    val status: Int,
+    val processor: String,
+    val updatedAt: String,
+    val createdAt: String
 )

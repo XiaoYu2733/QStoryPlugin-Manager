@@ -17,7 +17,7 @@ class PluginDownloadManager(private val context: Context) {
 
     private val okHttpClient = OkHttpClient()
 
-    private val pluginDir by lazy {
+    val pluginDir by lazy {
         val downloadDir = Environment.getExternalStoragePublicDirectory(
             Environment.DIRECTORY_DOWNLOADS
         )
@@ -49,7 +49,7 @@ class PluginDownloadManager(private val context: Context) {
         onProgress: (Int) -> Unit = {}
     ): Result<String> = withContext(Dispatchers.IO) {
         try {
-            val downloadUrl = "https://plugin.suzhelan.top/api/plugin/plugins/files/$cloudId"
+            val downloadUrl = "https://plugin.suzhelan.top/api/plugin/public/scripts/$cloudId/download"
             val fileName = generateFileName(pluginName, cloudId)
 
             Log.d("PluginDownloadManager", "Starting download: $downloadUrl")
