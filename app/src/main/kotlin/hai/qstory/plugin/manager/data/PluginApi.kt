@@ -22,7 +22,11 @@ data class OnlinePluginInfo(
     @SerializedName("pluginId")
     val pluginId: String,
     @SerializedName("pluginInfo")
-    val pluginInfo: PluginInfo
+    val pluginInfo: PluginInfo,
+    @SerializedName("auditStatus")
+    val auditStatus: Int? = null,
+    @SerializedName("onlineStatus")
+    val onlineStatus: Int? = null
 ) {
     data class PluginInfo(
         @SerializedName("author")

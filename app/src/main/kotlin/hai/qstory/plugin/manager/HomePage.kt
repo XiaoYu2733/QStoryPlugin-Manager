@@ -250,7 +250,7 @@ fun HomePage(
                         Text(text = "暂无脚本")
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = if (searchText.isNotBlank() || selectedTag != "全部") {
+                            text = if (searchText.isNotBlank() || selectedTag != "全部" || selectedStatus != "全部状态") {
                                 "未找到匹配的脚本"
                             } else {
                                 "这里是存放脚本的页面"
@@ -297,6 +297,40 @@ fun TagOptionButton(
 }
 
 @Composable
+fun StatusOptionButton(
+    label: String,
+    selectedStatus: String,
+    onClick: () -> Unit
+) {
+    val isSelected = selectedStatus == label
+    Button(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(label)
+            if (isSelected) {
+                Text("✓")
+            }
+        }
+    }
+}
+
+private fun getStatusLabel(plugin: OnlinePluginInfo): Pair<String, Color> {
+    return when {
+        plugin.onlineStatus == 1 -> "已上架" to Color(0xFF4CAF50)
+        plugin.onlineStatus == 0 -> "已下架" to Color(0xFFF44336)
+        plugin.auditStatus == 0 -> "待审核" to Color(0xFFFF9800)
+        plugin.auditStatus == 2 -> "未通过" to Color(0xFFF44336)
+        else -> "已上架" to Color(0xFF4CAF50)
+    }
+}
+
+@Composable
 fun PluginCard(
     plugin: OnlinePluginInfo,
     navigator: AppNavigator
@@ -321,7 +355,7 @@ fun PluginCard(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
@@ -344,6 +378,13 @@ fun PluginCard(
                         color = MiuixTheme.colorScheme.onSurfaceSecondary
                     )
                 }
+                val (statusText, statusColor) = getStatusLabel(plugin)
+                Text(
+                    text = statusText,
+                    fontSize = 11.sp,
+                    color = statusColor,
+                    fontWeight = FontWeight.Medium
+                )
             }
         }
     }
