@@ -124,7 +124,7 @@ fun HomePage(
     var showTagDialog by remember { mutableStateOf(false) }
     var showStatusDialog by remember { mutableStateOf(false) }
 
-    val statusOptions = listOf("全部状态", "已上架", "已下架", "待审核")
+    val statusOptions = listOf("全部状态", "已上架", "已下架", "未上线", "待审核")
 
     val filteredPlugins = remember(pluginList, selectedTag, selectedStatus, searchText) {
         pluginList.filter { plugin ->
@@ -138,6 +138,7 @@ fun HomePage(
             val statusMatch = when (selectedStatus) {
                 "已上架" -> plugin.onlineStatus == 1
                 "已下架" -> plugin.onlineStatus == 0
+                "未上线" -> plugin.onlineStatus == -1
                 "待审核" -> plugin.auditStatus == 0
                 else -> true
             }
@@ -344,10 +345,11 @@ fun StatusOptionButton(
 
 private fun getStatusLabel(plugin: ScriptListItem): Pair<String, Color> {
     return when {
-        plugin.onlineStatus == 1 -> "已上架" to Color(0xFF4CAF50)
-        plugin.onlineStatus == 0 -> "已下架" to Color(0xFFF44336)
         plugin.auditStatus == 0 -> "待审核" to Color(0xFFFF9800)
         plugin.auditStatus == 2 -> "未通过" to Color(0xFFF44336)
+        plugin.onlineStatus == 1 -> "已上架" to Color(0xFF4CAF50)
+        plugin.onlineStatus == 0 -> "已下架" to Color(0xFFF44336)
+        plugin.onlineStatus == -1 -> "未上线" to Color(0xFF9E9E9E)
         else -> "未上线" to Color(0xFF9E9E9E)
     }
 }
