@@ -74,12 +74,12 @@ private fun fetchGitHubUser(username: String): GitHubUser? {
 fun AboutPage() {
     val context = LocalContext.current
     val githubUrl = "https://github.com/XiaoYu2733/QStoryPlugin-Manager"
-    var developer by remember { mutableStateOf<GitHubUser?>(null) }
+    var developers by remember { mutableStateOf<List<GitHubUser>>(emptyList()) }
     var thanksUsers by remember { mutableStateOf<List<GitHubUser>>(emptyList()) }
 
     LaunchedEffect(Unit) {
         withContext(Dispatchers.IO) {
-            developer = fetchGitHubUser("XiaoYu2733")
+            developers = listOf("XiaoYu2733", "HChenX").mapNotNull { fetchGitHubUser(it) }
             thanksUsers = listOf("HdShare", "suzhelan").mapNotNull { fetchGitHubUser(it) }
         }
     }
