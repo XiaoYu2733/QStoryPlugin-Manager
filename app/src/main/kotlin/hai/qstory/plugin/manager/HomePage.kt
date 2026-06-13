@@ -18,10 +18,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -44,6 +46,9 @@ import hai.qstory.plugin.manager.data.ScriptDetail
 import hai.qstory.plugin.manager.data.ScriptListItem
 import hai.qstory.plugin.manager.manager.PluginDownloadManager
 import hai.qstory.plugin.manager.network.RetrofitClient
+import hai.qstory.plugin.manager.preferences.PreferencesManager
+import hai.qstory.plugin.manager.ui.util.BlurredBar
+import hai.qstory.plugin.manager.ui.util.rememberBlurBackdrop
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -58,11 +63,13 @@ import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.InfiniteProgressIndicator
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextField
+import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.basic.TopAppBar
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Back
+import top.yukonga.miuix.kmp.icon.extended.Download
 import top.yukonga.miuix.kmp.icon.extended.Info
 import top.yukonga.miuix.kmp.icon.extended.Settings
 
@@ -433,6 +440,17 @@ fun PluginDetailPage(
     var aiReview by remember { mutableStateOf<AiReviewRecord?>(null) }
     var aiReviewLoading by remember { mutableStateOf(true) }
 
+    val listState = rememberLazyListState()
+    val showTopBar by remember {
+        derivedStateOf {
+            listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 80
+        }
+    }
+
+    val enableBlur = PreferencesManager.enableBlur
+    val backdrop = rememberBlurBackdrop(enableBlur)
+    val blurActive = backdrop != null
+
     LaunchedEffect(cloudId) {
         withContext(Dispatchers.IO) {
             try {
@@ -465,14 +483,11 @@ fun PluginDetailPage(
         downloadedFileName = matchingFile?.fileName
     }
 
-    val isDownloaded = remember(downloadedFileName) {
-        downloadedFileName != null
-    }
-
     fun startDownload() {
         val currentPlugin = plugin ?: return
         if (isDownloading) return
         isDownloading = true
+        downloadProgress = 0
         downloadState = DownloadState.Downloading(0)
 
         coroutineScope.launch(Dispatchers.IO) {
@@ -504,36 +519,39 @@ fun PluginDetailPage(
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
-        when {
-            isLoading -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    InfiniteProgressIndicator(
-                        color = MiuixTheme.colorScheme.primary
-                    )
+        Box(
+            modifier = if (blurActive) Modifier.fillMaxSize().layerBackdrop(backdrop!!) else Modifier.fillMaxSize()
+        ) {
+            when {
+                isLoading -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        InfiniteProgressIndicator(
+                            color = MiuixTheme.colorScheme.primary
+                        )
+                    }
                 }
-            }
-            plugin == null -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = "脚本不存在",
-                        style = MiuixTheme.textStyles.body2,
-                        color = MiuixTheme.colorScheme.onSurfaceSecondary
-                    )
+                plugin == null -> {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "脚本不存在",
+                            style = MiuixTheme.textStyles.body2,
+                            color = MiuixTheme.colorScheme.onSurfaceSecondary
+                        )
+                    }
                 }
-            }
-            else -> {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    // 顶部间距，为返回按钮留出空间
+                else -> {
+                    LazyColumn(
+                        state = listState,
+                        modifier = Modifier.fillMaxSize()
+                    ) {
                     item {
-                        Spacer(modifier = Modifier.height(100.dp))
+                        Spacer(modifier = Modifier.height(88.dp))
                     }
 
                     // 头部大卡片
@@ -546,11 +564,9 @@ fun PluginDetailPage(
                             Column(
                                 modifier = Modifier.padding(20.dp)
                             ) {
-                                // 脚本图标和名称
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    // 显示脚本图标
                                     val images = plugin!!.images
                                     val iconUrl = images?.let {
                                         if (it.iconStatus == 1 && !it.iconFilename.isNullOrEmpty()) {
@@ -572,7 +588,6 @@ fun PluginDetailPage(
                                         Spacer(modifier = Modifier.width(16.dp))
                                     }
 
-                                    // 脚本名称和版本
                                     Column {
                                         Text(
                                             text = plugin!!.name,
@@ -590,7 +605,6 @@ fun PluginDetailPage(
 
                                 Spacer(modifier = Modifier.height(20.dp))
 
-                                // 作者信息
                                 Text(
                                     text = "作者: ${plugin!!.author}",
                                     style = MiuixTheme.textStyles.body2,
@@ -599,12 +613,23 @@ fun PluginDetailPage(
 
                                 Spacer(modifier = Modifier.height(12.dp))
 
-                                // 脚本ID
                                 Text(
                                     text = "ID: ${plugin!!.pluginId}",
                                     style = MiuixTheme.textStyles.body2,
                                     color = MiuixTheme.colorScheme.onSurfaceSecondary
                                 )
+
+                                if (plugin!!.tags.isNotEmpty()) {
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    androidx.compose.foundation.layout.FlowRow(
+                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        plugin!!.tags.forEach { tag ->
+                                            TagChip(tag = tag)
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -636,30 +661,6 @@ fun PluginDetailPage(
                         }
                     }
 
-                    // 标签卡片
-                    if (plugin!!.tags.isNotEmpty()) {
-                        item {
-                            Card(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 20.dp, vertical = 8.dp)
-                            ) {
-                                Column(
-                                    modifier = Modifier.padding(18.dp)
-                                ) {
-                                    androidx.compose.foundation.layout.FlowRow(
-                                        horizontalArrangement = Arrangement.spacedBy(10.dp),
-                                        verticalArrangement = Arrangement.spacedBy(10.dp)
-                                    ) {
-                                        plugin!!.tags.forEach { tag ->
-                                            TagChip(tag = tag)
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-
                     // AI 评审卡片
                     item {
                         AiReviewCard(aiReview = aiReview, isLoading = aiReviewLoading)
@@ -677,11 +678,21 @@ fun PluginDetailPage(
                                 Column(
                                     modifier = Modifier.padding(18.dp)
                                 ) {
-                                    Text(
-                                        text = "预览图",
-                                        style = MiuixTheme.textStyles.body2,
-                                        color = MiuixTheme.colorScheme.onSurfaceSecondary
-                                    )
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = "预览图",
+                                            style = MiuixTheme.textStyles.body2,
+                                            color = MiuixTheme.colorScheme.onSurfaceSecondary
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(
+                                            text = "右滑显示更多",
+                                            fontSize = 11.sp,
+                                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary
+                                        )
+                                    }
                                     Spacer(modifier = Modifier.height(10.dp))
                                     LazyRow(
                                         horizontalArrangement = Arrangement.spacedBy(12.dp)
@@ -705,89 +716,6 @@ fun PluginDetailPage(
                         }
                     }
 
-                    // 底部下载区域
-                    item {
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(20.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(18.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Column {
-                                    Text(
-                                        text = when (downloadState) {
-                                            is DownloadState.Idle -> if (isDownloaded) "已下载" else "准备下载"
-                                            is DownloadState.Downloading -> "下载中..."
-                                            is DownloadState.Success -> "下载完成"
-                                            is DownloadState.Failed -> "下载失败"
-                                        },
-                                        style = MiuixTheme.textStyles.body2,
-                                        color = MiuixTheme.colorScheme.onSurfaceSecondary
-                                    )
-                                    when (downloadState) {
-                                        is DownloadState.Downloading -> {
-                                            Spacer(modifier = Modifier.height(4.dp))
-                                            Text(
-                                                text = "${(downloadState as DownloadState.Downloading).progress}%",
-                                                style = MiuixTheme.textStyles.body2,
-                                                color = MiuixTheme.colorScheme.primary
-                                            )
-                                        }
-                                        else -> {}
-                                    }
-                                }
-
-                                when (downloadState) {
-                                    is DownloadState.Idle -> {
-                                        if (isDownloaded) {
-                                            Icon(
-                                                imageVector = MiuixIcons.Info,
-                                                contentDescription = "已下载",
-                                                tint = Color(0xFF4CAF50),
-                                                modifier = Modifier.size(28.dp)
-                                            )
-                                        } else {
-                                            Button(
-                                                onClick = { startDownload() }
-                                            ) {
-                                                Text("下载")
-                                            }
-                                        }
-                                    }
-                                    is DownloadState.Downloading -> {
-                                        Text(
-                                            text = "${(downloadState as DownloadState.Downloading).progress}%",
-                                            style = MiuixTheme.textStyles.body1,
-                                            color = MiuixTheme.colorScheme.primary
-                                        )
-                                    }
-                                    is DownloadState.Success -> {
-                                        Icon(
-                                            imageVector = MiuixIcons.Info,
-                                            contentDescription = "完成",
-                                            tint = Color(0xFF4CAF50),
-                                            modifier = Modifier.size(28.dp)
-                                        )
-                                    }
-                                    is DownloadState.Failed -> {
-                                        Button(
-                                            onClick = { startDownload() }
-                                        ) {
-                                            Text("重试")
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    // 底部间距
                     item {
                         Spacer(modifier = Modifier.height(20.dp))
                     }
@@ -795,18 +723,76 @@ fun PluginDetailPage(
             }
         }
 
-        // 悬浮返回按钮放在最后，确保在最上层
-        IconButton(
-            onClick = { navigator.pop() },
-            modifier = Modifier
-                .padding(top = 50.dp, start = 12.dp)
-                .size(44.dp)
-        ) {
-            Icon(
-                imageVector = MiuixIcons.Back,
-                contentDescription = "返回",
-                tint = MiuixTheme.colorScheme.onBackground
-            )
+        }
+
+        // 顶栏 — 始终显示，下滑时出现模糊/背景
+        BlurredBar(backdrop = backdrop) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .statusBarsPadding()
+                    .height(56.dp)
+                    .then(
+                        if (!blurActive && showTopBar) {
+                            Modifier.background(MiuixTheme.colorScheme.surface.copy(alpha = 0.85f))
+                        } else {
+                            Modifier
+                        }
+                    ),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(
+                    onClick = { navigator.pop() },
+                    modifier = Modifier.size(44.dp)
+                ) {
+                    Icon(
+                        imageVector = MiuixIcons.Back,
+                        contentDescription = "返回",
+                        tint = MiuixTheme.colorScheme.onBackground
+                    )
+                }
+
+                if (showTopBar && plugin != null) {
+                    Text(
+                        text = plugin!!.name,
+                        style = MiuixTheme.textStyles.body1,
+                        fontWeight = FontWeight.Medium,
+                        maxLines = 1,
+                        modifier = Modifier.weight(1f).padding(horizontal = 12.dp)
+                    )
+                } else {
+                    Spacer(modifier = Modifier.weight(1f))
+                }
+
+                when {
+                    isDownloading -> {
+                        Text(
+                            text = "${downloadProgress}%",
+                            style = MiuixTheme.textStyles.body2,
+                            color = MiuixTheme.colorScheme.primary,
+                            modifier = Modifier.padding(end = 16.dp)
+                        )
+                    }
+                    else -> {
+                        val iconTint = when (downloadState) {
+                            is DownloadState.Success -> Color(0xFF4CAF50)
+                            is DownloadState.Failed -> Color(0xFFF44336)
+                            else -> MiuixTheme.colorScheme.onBackground
+                        }
+                        IconButton(
+                            onClick = { startDownload() },
+                            modifier = Modifier.size(44.dp)
+                        ) {
+                            Icon(
+                                imageVector = MiuixIcons.Download,
+                                contentDescription = "下载",
+                                tint = iconTint
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }
