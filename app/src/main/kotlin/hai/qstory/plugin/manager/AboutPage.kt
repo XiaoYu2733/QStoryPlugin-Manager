@@ -84,8 +84,6 @@ fun AboutPage() {
         }
     }
 
-    val user = developer
-
     LazyColumn(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -160,7 +158,7 @@ fun AboutPage() {
         }
 
         // 开发者
-        if (user != null) {
+        if (developers.isNotEmpty()) {
             item {
                 SmallTitle(text = "开发者")
             }
@@ -171,40 +169,45 @@ fun AboutPage() {
                         .padding(horizontal = 12.dp)
                         .padding(bottom = 12.dp),
                     insideMargin = PaddingValues(16.dp),
-                    pressFeedbackType = PressFeedbackType.Sink,
-                    showIndication = true,
-                    onClick = {
-                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(user.htmlUrl))
-                        context.startActivity(intent)
-                    }
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        AsyncImage(
-                            model = ImageRequest.Builder(LocalContext.current)
-                                .data(user.avatarUrl)
-                                .crossfade(true)
-                                .build(),
-                            contentDescription = "GitHub 头像",
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier
-                                .size(48.dp)
-                                .clip(RoundedCornerShape(24.dp))
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column {
-                            Text(
-                                text = user.login,
-                                style = MiuixTheme.textStyles.body1,
-                                fontWeight = FontWeight.Medium
-                            )
-                            if (user.name.isNotEmpty() && user.name != user.login) {
-                                Text(
-                                    text = user.name,
-                                    style = MiuixTheme.textStyles.body2,
-                                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary
+                    Column {
+                        developers.forEach { dev ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(dev.htmlUrl))
+                                        context.startActivity(intent)
+                                    }
+                                    .padding(vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                AsyncImage(
+                                    model = ImageRequest.Builder(LocalContext.current)
+                                        .data(dev.avatarUrl)
+                                        .crossfade(true)
+                                        .build(),
+                                    contentDescription = "GitHub 头像",
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .clip(RoundedCornerShape(20.dp))
                                 )
+                                Spacer(modifier = Modifier.width(12.dp))
+                                Column {
+                                    Text(
+                                        text = dev.login,
+                                        style = MiuixTheme.textStyles.body2,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                    if (dev.name.isNotEmpty() && dev.name != dev.login) {
+                                        Text(
+                                            text = dev.name,
+                                            style = MiuixTheme.textStyles.body2,
+                                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
