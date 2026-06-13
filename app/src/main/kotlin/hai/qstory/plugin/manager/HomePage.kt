@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.background
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
@@ -38,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import hai.qstory.plugin.manager.data.AiReviewRecord
 import hai.qstory.plugin.manager.data.ScriptDetail
 import hai.qstory.plugin.manager.data.ScriptListItem
 import hai.qstory.plugin.manager.manager.PluginDownloadManager
@@ -428,6 +430,8 @@ fun PluginDetailPage(
     var isDownloading by remember { mutableStateOf(false) }
     var downloadedFileName by remember { mutableStateOf<String?>(null) }
     var downloadProgress by remember { mutableStateOf(0) }
+    var aiReview by remember { mutableStateOf<AiReviewRecord?>(null) }
+    var aiReviewLoading by remember { mutableStateOf(true) }
 
     LaunchedEffect(cloudId) {
         withContext(Dispatchers.IO) {
@@ -438,6 +442,19 @@ fun PluginDetailPage(
                 }
             } finally {
                 isLoading = false
+            }
+        }
+    }
+
+    LaunchedEffect(cloudId) {
+        withContext(Dispatchers.IO) {
+            try {
+                val response = RetrofitClient.pluginService.getPublicScriptAiReview(cloudId)
+                if (response.isSuccess()) {
+                    aiReview = response.data
+                }
+            } finally {
+                aiReviewLoading = false
             }
         }
     }
@@ -643,6 +660,11 @@ fun PluginDetailPage(
                         }
                     }
 
+                    // AI 评审卡片
+                    item {
+                        AiReviewCard(aiReview = aiReview, isLoading = aiReviewLoading)
+                    }
+
                     // 预览图卡片
                     val images = plugin!!.images
                     if (images?.previewStatus == 1 && !images.previewFilename.isNullOrEmpty()) {
@@ -661,10 +683,10 @@ fun PluginDetailPage(
                                         color = MiuixTheme.colorScheme.onSurfaceSecondary
                                     )
                                     Spacer(modifier = Modifier.height(10.dp))
-                                    Column(
-                                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                                    LazyRow(
+                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
                                     ) {
-                                        images.previewFilename.forEach { filename ->
+                                        items(images.previewFilename) { filename ->
                                             val previewUrl = "https://plugin.suzhelan.top/api/plugin/images/${plugin!!.cloudId}/$filename"
                                             AsyncImage(
                                                 model = ImageRequest.Builder(LocalContext.current)
@@ -673,7 +695,7 @@ fun PluginDetailPage(
                                                     .build(),
                                                 contentDescription = "预览图",
                                                 modifier = Modifier
-                                                    .fillMaxWidth()
+                                                    .width(260.dp)
                                                     .clip(RoundedCornerShape(12.dp))
                                             )
                                         }
@@ -785,6 +807,248 @@ fun PluginDetailPage(
                 contentDescription = "返回",
                 tint = MiuixTheme.colorScheme.onBackground
             )
+        }
+    }
+}
+
+@Composable
+fun AiReviewCard(
+    aiReview: AiReviewRecord?,
+    isLoading: Boolean
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 8.dp)
+    ) {
+        Column(modifier = Modifier.padding(18.dp)) {
+            Text(
+                text = "AI 评审",
+                style = MiuixTheme.textStyles.body1,
+                fontWeight = FontWeight.Bold
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+
+            when {
+                isLoading -> {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        InfiniteProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = MiuixTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = "加载中...",
+                            style = MiuixTheme.textStyles.body2,
+                            color = MiuixTheme.colorScheme.onSurfaceSecondary
+                        )
+                    }
+                }
+                aiReview == null -> {
+                    Text(
+                        text = "该脚本尚未进行 AI 评审",
+                        style = MiuixTheme.textStyles.body2,
+                        color = MiuixTheme.colorScheme.onSurfaceSecondary
+                    )
+                }
+                aiReview.reviewStatus == 0 -> {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        InfiniteProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = Color(0xFFFF9800)
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = "AI 评审中，请稍后查看...",
+                            style = MiuixTheme.textStyles.body2,
+                            color = Color(0xFFFF9800)
+                        )
+                    }
+                }
+                aiReview.reviewStatus == 2 -> {
+                    Text(
+                        text = "AI 评审失败",
+                        style = MiuixTheme.textStyles.body2,
+                        color = Color(0xFFF44336)
+                    )
+                    if (!aiReview.errorMessage.isNullOrEmpty()) {
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = aiReview.errorMessage,
+                            style = MiuixTheme.textStyles.body2,
+                            color = MiuixTheme.colorScheme.onSurfaceSecondary
+                        )
+                    }
+                }
+                aiReview.reviewStatus == 1 -> {
+                    val result = aiReview.reviewResult ?: return@Card
+
+                    // 合规状态 + 风险等级
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = if (result.compliance.passed) "合规通过" else "存在严重问题",
+                                style = MiuixTheme.textStyles.body2,
+                                fontWeight = FontWeight.Medium,
+                                color = if (result.compliance.passed) Color(0xFF4CAF50) else Color(0xFFF44336)
+                            )
+                        }
+                        val riskColor = when (result.riskLevel) {
+                            "high" -> Color(0xFFF44336)
+                            "medium" -> Color(0xFFFF9800)
+                            else -> Color(0xFF4CAF50)
+                        }
+                        val riskLabel = when (result.riskLevel) {
+                            "high" -> "高风险"
+                            "medium" -> "中风险"
+                            else -> "低风险"
+                        }
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(riskColor.copy(alpha = 0.15f))
+                                .padding(horizontal = 10.dp, vertical = 4.dp)
+                        ) {
+                            Text(
+                                text = riskLabel,
+                                style = MiuixTheme.textStyles.body2,
+                                fontWeight = FontWeight.Medium,
+                                color = riskColor
+                            )
+                        }
+                    }
+
+                    // 评审摘要
+                    if (!result.summary.isNullOrEmpty()) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        HorizontalDivider(thickness = 0.5.dp)
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = "摘要",
+                            style = MiuixTheme.textStyles.body2,
+                            color = MiuixTheme.colorScheme.onSurfaceSecondary
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        Text(
+                            text = result.summary,
+                            style = MiuixTheme.textStyles.body2,
+                            lineHeight = 20.sp
+                        )
+                    }
+
+                    // 发现的问题
+                    val issues = result.compliance.issues
+                    if (!issues.isNullOrEmpty()) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        HorizontalDivider(thickness = 0.5.dp)
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = "问题 (${issues.size})",
+                            style = MiuixTheme.textStyles.body2,
+                            color = MiuixTheme.colorScheme.onSurfaceSecondary
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        issues.forEach { issue ->
+                            val levelColor = when (issue.level) {
+                                "error" -> Color(0xFFF44336)
+                                "warning" -> Color(0xFFFF9800)
+                                else -> Color(0xFF2196F3)
+                            }
+                            val levelLabel = when (issue.level) {
+                                "error" -> "严重"
+                                "warning" -> "警告"
+                                else -> "提示"
+                            }
+                            Column(
+                                modifier = Modifier.padding(bottom = 8.dp)
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Box(
+                                        modifier = Modifier
+                                            .clip(RoundedCornerShape(4.dp))
+                                            .background(levelColor.copy(alpha = 0.15f))
+                                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                                    ) {
+                                        Text(
+                                            text = "$levelLabel · ${issue.category}",
+                                            fontSize = 11.sp,
+                                            color = levelColor,
+                                            fontWeight = FontWeight.Medium
+                                        )
+                                    }
+                                    if (!issue.location.isNullOrEmpty()) {
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(
+                                            text = issue.location,
+                                            fontSize = 11.sp,
+                                            color = MiuixTheme.colorScheme.onSurfaceSecondary
+                                        )
+                                    }
+                                }
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = issue.message,
+                                    style = MiuixTheme.textStyles.body2,
+                                    lineHeight = 18.sp
+                                )
+                            }
+                        }
+                    }
+
+                    // 改进建议
+                    val suggestions = result.suggestions
+                    if (!suggestions.isNullOrEmpty()) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        HorizontalDivider(thickness = 0.5.dp)
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = "改进建议",
+                            style = MiuixTheme.textStyles.body2,
+                            color = MiuixTheme.colorScheme.onSurfaceSecondary
+                        )
+                        Spacer(modifier = Modifier.height(6.dp))
+                        suggestions.forEachIndexed { index, suggestion ->
+                            Row(modifier = Modifier.padding(bottom = 4.dp)) {
+                                Text(
+                                    text = "${index + 1}.",
+                                    style = MiuixTheme.textStyles.body2,
+                                    fontWeight = FontWeight.Medium,
+                                    modifier = Modifier.width(20.dp)
+                                )
+                                Text(
+                                    text = suggestion,
+                                    style = MiuixTheme.textStyles.body2,
+                                    lineHeight = 18.sp
+                                )
+                            }
+                        }
+                    }
+
+                    // Token 与模型
+                    Spacer(modifier = Modifier.height(12.dp))
+                    HorizontalDivider(thickness = 0.5.dp)
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "模型: ${aiReview.modelUsed ?: "未知"}",
+                            style = MiuixTheme.textStyles.body2,
+                            color = MiuixTheme.colorScheme.onSurfaceSecondary
+                        )
+                        Text(
+                            text = "Token: ${aiReview.tokensUsed ?: 0}",
+                            style = MiuixTheme.textStyles.body2,
+                            color = MiuixTheme.colorScheme.onSurfaceSecondary
+                        )
+                    }
+                }
+            }
         }
     }
 }

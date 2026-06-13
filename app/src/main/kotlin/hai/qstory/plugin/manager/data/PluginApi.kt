@@ -211,3 +211,36 @@ data class OnlinePluginRecord(
     val updatedAt: String,
     val createdAt: String
 )
+
+// ── AI Review models ──
+
+data class AiReviewRecord(
+    val id: Int,
+    val cloudId: String,
+    val reviewStatus: Int,
+    val reviewResult: ReviewResult?,
+    val errorMessage: String?,
+    val modelUsed: String?,
+    val tokensUsed: Int?,
+    val createdAt: String,
+    val updatedAt: String
+)
+
+data class ReviewResult(
+    val compliance: ComplianceResult,
+    val summary: String?,
+    val suggestions: List<String>?,
+    val riskLevel: String
+)
+
+data class ComplianceResult(
+    val passed: Boolean,
+    val issues: List<ComplianceIssue>?
+)
+
+data class ComplianceIssue(
+    val level: String,
+    val category: String,
+    val message: String,
+    val location: String?
+)

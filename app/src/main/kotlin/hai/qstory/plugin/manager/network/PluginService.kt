@@ -2,6 +2,7 @@ package hai.qstory.plugin.manager.network
 
 import hai.qstory.plugin.manager.data.OnlinePluginInfo
 import hai.qstory.plugin.manager.data.PaginatedScripts
+import hai.qstory.plugin.manager.data.AiReviewRecord
 import hai.qstory.plugin.manager.data.PlatformStatistics
 import hai.qstory.plugin.manager.data.QSResult
 import hai.qstory.plugin.manager.data.ScriptDetail
@@ -33,4 +34,9 @@ interface PluginService {
 
     @GET("public/statistics")
     suspend fun getPlatformStatistics(): QSResult<PlatformStatistics>
+
+    @GET("public/scripts/{cloudId}/ai-review")
+    suspend fun getPublicScriptAiReview(
+        @Path("cloudId") cloudId: String
+    ): QSResult<AiReviewRecord>
 }
