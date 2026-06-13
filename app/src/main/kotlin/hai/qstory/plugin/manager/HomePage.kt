@@ -1,5 +1,7 @@
 package hai.qstory.plugin.manager
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
@@ -15,6 +17,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -37,6 +40,8 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
@@ -440,6 +445,8 @@ fun PluginDetailPage(
     var downloadProgress by remember { mutableStateOf(0) }
     var aiReview by remember { mutableStateOf<AiReviewRecord?>(null) }
     var aiReviewLoading by remember { mutableStateOf(true) }
+    var showSuccessDialog by remember { mutableStateOf(false) }
+    var downloadDirPath by remember { mutableStateOf("") }
 
     val listState = rememberLazyListState()
     val showTopBar by remember {
@@ -508,7 +515,8 @@ fun PluginDetailPage(
                 if (result.isSuccess) {
                     downloadedFileName = result.getOrNull()
                     downloadState = DownloadState.Success
-                    Toast.makeText(context, "下载成功\n${downloadManager.pluginDir.absolutePath}", Toast.LENGTH_LONG).show()
+                    downloadDirPath = downloadManager.pluginDir.absolutePath
+                    showSuccessDialog = true
                 } else {
                     downloadState = DownloadState.Failed
                     Toast.makeText(context, "下载失败", Toast.LENGTH_SHORT).show()
@@ -792,6 +800,74 @@ fun PluginDetailPage(
                     }
                 }
             }
+            }
+        }
+
+        if (showSuccessDialog) {
+            DownloadSuccessDialog(
+                dirPath = downloadDirPath,
+                onDismiss = { showSuccessDialog = false }
+            )
+        }
+    }
+}
+
+@Composable
+fun DownloadSuccessDialog(
+    dirPath: String,
+    onDismiss: () -> Unit
+) {
+    val context = LocalContext.current
+
+    Dialog(
+        onDismissRequest = { /* 只能点击确定关闭 */ },
+        properties = DialogProperties(
+            dismissOnBackPress = false,
+            dismissOnClickOutside = false
+        )
+    ) {
+        Card(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                modifier = Modifier.padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "下载成功",
+                    style = MiuixTheme.textStyles.body1,
+                    fontWeight = FontWeight.Bold
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "脚本已下载到以下目录，点击可复制",
+                    style = MiuixTheme.textStyles.body2,
+                    color = MiuixTheme.colorScheme.onSurfaceSecondary
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = dirPath,
+                    style = MiuixTheme.textStyles.body2,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(MiuixTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                        .clickable {
+                            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                            val clip = ClipData.newPlainText("download_path", dirPath)
+                            clipboard.setPrimaryClip(clip)
+                            Toast.makeText(context, "已复制到剪贴板", Toast.LENGTH_SHORT).show()
+                        }
+                        .padding(12.dp)
+                )
+                Spacer(modifier = Modifier.height(20.dp))
+                Button(
+                    onClick = onDismiss,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("确定")
+                }
             }
         }
     }
