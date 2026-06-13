@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import hai.qstory.plugin.manager.data.AiReviewRecord
+import hai.qstory.plugin.manager.data.ComplianceIssue
 import hai.qstory.plugin.manager.data.ScriptDetail
 import hai.qstory.plugin.manager.data.ScriptListItem
 import hai.qstory.plugin.manager.manager.PluginDownloadManager
@@ -866,149 +867,25 @@ fun AiReviewCard(
                 aiReview.reviewStatus == 1 -> {
                     val result = aiReview.reviewResult ?: return@Card
 
-                    // 合规状态 + 风险等级
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = if (result.compliance.passed) "合规通过" else "存在严重问题",
-                                style = MiuixTheme.textStyles.body2,
-                                fontWeight = FontWeight.Medium,
-                                color = if (result.compliance.passed) Color(0xFF4CAF50) else Color(0xFFF44336)
-                            )
-                        }
-                        val riskColor = when (result.riskLevel) {
-                            "high" -> Color(0xFFF44336)
-                            "medium" -> Color(0xFFFF9800)
-                            else -> Color(0xFF4CAF50)
-                        }
-                        val riskLabel = when (result.riskLevel) {
-                            "high" -> "高风险"
-                            "medium" -> "中风险"
-                            else -> "低风险"
-                        }
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(riskColor.copy(alpha = 0.15f))
-                                .padding(horizontal = 10.dp, vertical = 4.dp)
-                        ) {
-                            Text(
-                                text = riskLabel,
-                                style = MiuixTheme.textStyles.body2,
-                                fontWeight = FontWeight.Medium,
-                                color = riskColor
-                            )
-                        }
-                    }
-
-                    // 评审摘要
-                    if (!result.summary.isNullOrEmpty()) {
-                        Spacer(modifier = Modifier.height(12.dp))
-                        HorizontalDivider(thickness = 0.5.dp)
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Text(
-                            text = "摘要",
-                            style = MiuixTheme.textStyles.body2,
-                            color = MiuixTheme.colorScheme.onSurfaceSecondary
-                        )
-                        Spacer(modifier = Modifier.height(6.dp))
-                        Text(
-                            text = result.summary,
-                            style = MiuixTheme.textStyles.body2,
-                            lineHeight = 20.sp
-                        )
-                    }
+                    // 风险等级摘要
+                    RiskSummary(
+                        riskLevel = result.riskLevel,
+                        summary = result.summary,
+                        passed = result.compliance.passed
+                    )
 
                     // 发现的问题
                     val issues = result.compliance.issues
                     if (!issues.isNullOrEmpty()) {
                         Spacer(modifier = Modifier.height(12.dp))
-                        HorizontalDivider(thickness = 0.5.dp)
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Text(
-                            text = "问题 (${issues.size})",
-                            style = MiuixTheme.textStyles.body2,
-                            color = MiuixTheme.colorScheme.onSurfaceSecondary
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        issues.forEach { issue ->
-                            val levelColor = when (issue.level) {
-                                "error" -> Color(0xFFF44336)
-                                "warning" -> Color(0xFFFF9800)
-                                else -> Color(0xFF2196F3)
-                            }
-                            val levelLabel = when (issue.level) {
-                                "error" -> "严重"
-                                "warning" -> "警告"
-                                else -> "提示"
-                            }
-                            Column(
-                                modifier = Modifier.padding(bottom = 8.dp)
-                            ) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Box(
-                                        modifier = Modifier
-                                            .clip(RoundedCornerShape(4.dp))
-                                            .background(levelColor.copy(alpha = 0.15f))
-                                            .padding(horizontal = 6.dp, vertical = 2.dp)
-                                    ) {
-                                        Text(
-                                            text = "$levelLabel · ${issue.category}",
-                                            fontSize = 11.sp,
-                                            color = levelColor,
-                                            fontWeight = FontWeight.Medium
-                                        )
-                                    }
-                                    if (!issue.location.isNullOrEmpty()) {
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        Text(
-                                            text = issue.location,
-                                            fontSize = 11.sp,
-                                            color = MiuixTheme.colorScheme.onSurfaceSecondary
-                                        )
-                                    }
-                                }
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = issue.message,
-                                    style = MiuixTheme.textStyles.body2,
-                                    lineHeight = 18.sp
-                                )
-                            }
-                        }
+                        IssuesList(issues = issues)
                     }
 
                     // 改进建议
                     val suggestions = result.suggestions
                     if (!suggestions.isNullOrEmpty()) {
                         Spacer(modifier = Modifier.height(12.dp))
-                        HorizontalDivider(thickness = 0.5.dp)
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Text(
-                            text = "改进建议",
-                            style = MiuixTheme.textStyles.body2,
-                            color = MiuixTheme.colorScheme.onSurfaceSecondary
-                        )
-                        Spacer(modifier = Modifier.height(6.dp))
-                        suggestions.forEachIndexed { index, suggestion ->
-                            Row(modifier = Modifier.padding(bottom = 4.dp)) {
-                                Text(
-                                    text = "${index + 1}.",
-                                    style = MiuixTheme.textStyles.body2,
-                                    fontWeight = FontWeight.Medium,
-                                    modifier = Modifier.width(20.dp)
-                                )
-                                Text(
-                                    text = suggestion,
-                                    style = MiuixTheme.textStyles.body2,
-                                    lineHeight = 18.sp
-                                )
-                            }
-                        }
+                        SuggestionsList(suggestions = suggestions)
                     }
 
                     // Token 与模型
@@ -1031,6 +908,191 @@ fun AiReviewCard(
                         )
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun RiskSummary(
+    riskLevel: String,
+    summary: String?,
+    passed: Boolean
+) {
+    val riskColor = when (riskLevel) {
+        "high" -> Color(0xFFF44336)
+        "medium" -> Color(0xFFFF9800)
+        else -> Color(0xFF4CAF50)
+    }
+    val riskLabel = when (riskLevel) {
+        "high" -> "高风险"
+        "medium" -> "中风险"
+        else -> "低风险"
+    }
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(8.dp))
+                .background(riskColor.copy(alpha = 0.15f))
+                .padding(horizontal = 10.dp, vertical = 4.dp)
+        ) {
+            Text(
+                text = riskLabel,
+                style = MiuixTheme.textStyles.body2,
+                fontWeight = FontWeight.Medium,
+                color = riskColor
+            )
+        }
+        Spacer(modifier = Modifier.width(10.dp))
+        Text(
+            text = if (passed) "合规通过" else "存在严重问题",
+            fontSize = 12.sp,
+            color = if (passed) Color(0xFF4CAF50) else Color(0xFFF44336)
+        )
+    }
+
+    if (!summary.isNullOrEmpty()) {
+        Spacer(modifier = Modifier.height(10.dp))
+        Text(
+            text = summary,
+            style = MiuixTheme.textStyles.body2,
+            lineHeight = 20.sp
+        )
+    }
+}
+
+@Composable
+private fun IssuesList(issues: List<ComplianceIssue>) {
+    Column {
+        Text(
+            text = "发现的问题 (${issues.size})",
+            style = MiuixTheme.textStyles.body2,
+            fontWeight = FontWeight.Bold
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+
+        issues.forEach { issue ->
+            IssueItem(issue = issue)
+        }
+    }
+}
+
+@Composable
+private fun IssueItem(issue: ComplianceIssue) {
+    val levelColor = when (issue.level) {
+        "error" -> Color(0xFFF44336)
+        "warning" -> Color(0xFFFF9800)
+        else -> Color(0xFF2196F3)
+    }
+    val levelLabel = when (issue.level) {
+        "error" -> "严重"
+        "warning" -> "警告"
+        else -> "提示"
+    }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+    ) {
+        Column(
+            modifier = Modifier.padding(12.dp)
+        ) {
+            // 级别 + 分类
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(4.dp))
+                        .background(levelColor.copy(alpha = 0.15f))
+                        .padding(horizontal = 8.dp, vertical = 3.dp)
+                ) {
+                    Text(
+                        text = levelLabel,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = levelColor
+                    )
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = issue.category,
+                    fontSize = 11.sp,
+                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // 问题描述
+            Text(
+                text = issue.message,
+                style = MiuixTheme.textStyles.body2,
+                lineHeight = 18.sp
+            )
+
+            // 位置信息
+            if (!issue.location.isNullOrEmpty()) {
+                Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = issue.location,
+                    fontSize = 12.sp,
+                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary
+                )
+            }
+
+            // 代码片段
+            if (!issue.codeSnippet.isNullOrEmpty()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    cornerRadius = 4.dp
+                ) {
+                    SelectionContainer {
+                        Text(
+                            text = issue.codeSnippet,
+                            fontSize = 12.sp,
+                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                            modifier = Modifier.padding(8.dp)
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SuggestionsList(suggestions: List<String>) {
+    Column {
+        Text(
+            text = "改进建议 (${suggestions.size})",
+            style = MiuixTheme.textStyles.body2,
+            fontWeight = FontWeight.Bold
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+
+        suggestions.forEachIndexed { index, suggestion ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp)
+            ) {
+                Text(
+                    text = "${index + 1}.",
+                    style = MiuixTheme.textStyles.body2,
+                    fontWeight = FontWeight.Medium,
+                    color = MiuixTheme.colorScheme.primary
+                )
+                Spacer(modifier = Modifier.width(6.dp))
+                Text(
+                    text = suggestion,
+                    style = MiuixTheme.textStyles.body2,
+                    lineHeight = 18.sp
+                )
             }
         }
     }

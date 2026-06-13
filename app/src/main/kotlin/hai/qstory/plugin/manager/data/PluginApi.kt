@@ -242,5 +242,6 @@ data class ComplianceIssue(
     val level: String,
     val category: String,
     val message: String,
-    val location: String?
+    val location: String?,
+    val codeSnippet: String?
 )
