@@ -621,14 +621,11 @@ fun PluginDetailPage(
 
                                 if (plugin!!.tags.isNotEmpty()) {
                                     Spacer(modifier = Modifier.height(12.dp))
-                                    androidx.compose.foundation.layout.FlowRow(
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                                    ) {
-                                        plugin!!.tags.forEach { tag ->
-                                            TagChip(tag = tag)
-                                        }
-                                    }
+                                    Text(
+                                        text = "标签：${plugin!!.tags.joinToString(" ")}",
+                                        style = MiuixTheme.textStyles.body2,
+                                        color = MiuixTheme.colorScheme.onSurfaceSecondary
+                                    )
                                 }
                             }
                         }
