@@ -14,7 +14,7 @@ android {
         minSdk = 24
         targetSdk = 37
         versionCode = 1
-        versionName = "4.0"
+        versionName = "1.0.5"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -54,16 +54,6 @@ android {
 
     composeOptions {
         kotlinCompilerVersion = "2.1.0"
-    }
-
-    // 禁用 AAB，只生成 APK
-    dependenciesInfo.includeInApk = false
-
-    // 禁用 bundle 工具生成 apks
-    packaging {
-        resources {
-            excludes += "/META-INF/{AL2.0,LGPL2.1}"
-        }
     }
 }
 
