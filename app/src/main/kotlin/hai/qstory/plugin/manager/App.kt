@@ -69,8 +69,8 @@ fun App(
                 }
                 override fun pop() {
                     if (navStack.size > 1) {
-                        navStack.removeLast()
-                        currentRoute = navStack.last()
+                        currentRoute = navStack[navStack.size - 2]
+                        navStack.removeAt(navStack.lastIndex)
                     }
                 }
                 override fun current() = currentRoute
