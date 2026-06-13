@@ -725,21 +725,22 @@ fun PluginDetailPage(
 
         // 顶栏 — 始终显示，下滑时出现模糊/背景
         BlurredBar(backdrop = backdrop) {
-            Row(
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .statusBarsPadding()
-                    .height(56.dp)
                     .then(
-                        if (!blurActive && showTopBar) {
-                            Modifier.background(MiuixTheme.colorScheme.surface.copy(alpha = 0.85f))
-                        } else {
-                            Modifier
-                        }
-                    ),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                        if (!blurActive) Modifier.background(MiuixTheme.colorScheme.surface)
+                        else Modifier
+                    )
             ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .statusBarsPadding()
+                        .height(56.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
                 IconButton(
                     onClick = { navigator.pop() },
                     modifier = Modifier.size(44.dp)
@@ -790,6 +791,7 @@ fun PluginDetailPage(
                         }
                     }
                 }
+            }
             }
         }
     }
