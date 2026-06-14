@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Dashboard
+import androidx.compose.material.icons.rounded.Palette
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -64,6 +65,14 @@ fun SettingsPage(
                 ArrowPreference(
                     title = "主题设置",
                     summary = "调整主题模式、强调色、模糊效果等",
+                    startAction = {
+                        Icon(
+                            Icons.Rounded.Palette,
+                            modifier = Modifier.padding(end = 6.dp),
+                            contentDescription = "主题设置",
+                            tint = MiuixTheme.colorScheme.onBackground
+                        )
+                    },
                     onClick = { navigator.push(Route.ColorPalette) }
                 )
             }

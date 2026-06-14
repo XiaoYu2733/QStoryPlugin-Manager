@@ -141,7 +141,7 @@ fun ColorPaletteScreen(
             BlurredBar(backdrop) {
                 TopAppBar(
                     color = barColor,
-                    title = "界面风格",
+                    title = "主题设置",
                     navigationIcon = {
                         IconButton(onClick = onBack) {
                             val layoutDirection = LocalLayoutDirection.current
