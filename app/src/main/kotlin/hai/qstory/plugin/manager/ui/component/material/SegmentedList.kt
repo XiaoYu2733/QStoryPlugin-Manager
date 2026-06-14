@@ -108,7 +108,6 @@ fun SegmentedSwitchItem(
     onCheckedChange: (Boolean) -> Unit,
 ) {
     val haptic = LocalHapticFeedback.current
-    val interactionSource = remember { MutableInteractionSource() }
 
     ListItem(
         headlineContent = { Text(title) },
@@ -118,9 +117,15 @@ fun SegmentedSwitchItem(
             ExpressiveSwitch(
                 checked = checked,
                 enabled = enabled,
-                onCheckedChange = null,
-                interactionSource = interactionSource,
+                onCheckedChange = { newValue ->
+                    haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
+                    onCheckedChange(newValue)
+                },
             )
+        },
+        modifier = Modifier.clickable(enabled = enabled) {
+            haptic.performHapticFeedback(HapticFeedbackType.VirtualKey)
+            onCheckedChange(!checked)
         },
         colors = ListItemDefaults.colors(
             containerColor = colorScheme.surfaceColorAtElevation(1.dp),

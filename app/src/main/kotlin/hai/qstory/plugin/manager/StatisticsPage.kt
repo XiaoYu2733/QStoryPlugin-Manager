@@ -124,37 +124,13 @@ fun StatisticsPage() {
 
 @Composable
 private fun OverviewCards(data: PlatformStatistics) {
-    LazyRow(
-        modifier = Modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(horizontal = 12.dp),
-        horizontalArrangement = Arrangement.spacedBy(10.dp)
-    ) {
-        item { StatItemCard("累计下载", formatNumber(data.downloads.total), adaptivePrimaryColor()) }
-        item { StatItemCard("脚本总数", "${data.scripts.total}", adaptivePrimaryColor()) }
-        item { StatItemCard("审核总数", "${data.audits.total}", adaptivePrimaryColor()) }
-        item { StatItemCard("AI 评审", "${data.aiReviews.total}", adaptivePrimaryColor()) }
-        item { StatItemCard("评论总数", "${data.comments.total}", adaptivePrimaryColor()) }
-    }
-}
-
-@Composable
-private fun StatItemCard(label: String, value: String, accentColor: androidx.compose.ui.graphics.Color) {
-    AdaptiveCard(modifier = Modifier.width(130.dp)) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            AdaptiveText(
-                text = label,
-                color = adaptiveOnSurfaceVariantSummary(),
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-            AdaptiveText(
-                text = value,
-                fontWeight = FontWeight.Bold,
-                color = accentColor,
-                modifier = Modifier.fillMaxWidth(),
-            )
+    AdaptiveCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp)) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            StatRow("累计下载", formatNumber(data.downloads.total))
+            StatRow("脚本总数", "${data.scripts.total}")
+            StatRow("审核总数", "${data.audits.total}")
+            StatRow("AI 评审", "${data.aiReviews.total}")
+            StatRow("评论总数", "${data.comments.total}")
         }
     }
 }

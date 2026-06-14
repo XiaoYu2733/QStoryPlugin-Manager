@@ -335,52 +335,6 @@ fun ColorPaletteScreenMaterial(
                     modifier = Modifier.padding(top = 4.dp),
                     content = listOf(
                         {
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                SegmentedSwitchItem(
-                                    icon = Icons.Rounded.BlurOn,
-                                    title = "模糊效果",
-                                    summary = "启用后将在界面中应用模糊效果",
-                                    checked = enableBlur,
-                                    onCheckedChange = {
-                                        enableBlur = it
-                                        saveAndRefresh()
-                                    }
-                                )
-                            }
-                        },
-                        {
-                            SegmentedSwitchItem(
-                                icon = Icons.Rounded.CallToAction,
-                                title = "悬浮底栏",
-                                summary = "将底栏变为 iOS 风格的悬浮样式",
-                                checked = enableFloatingBottomBar,
-                                onCheckedChange = {
-                                    enableFloatingBottomBar = it
-                                    saveAndRefresh()
-                                }
-                            )
-                        },
-                        {
-                            AnimatedVisibility(visible = enableFloatingBottomBar && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                SegmentedSwitchItem(
-                                    icon = Icons.Rounded.WaterDrop,
-                                    title = "液体玻璃",
-                                    summary = "为悬浮底栏添加液体玻璃效果",
-                                    checked = enableFloatingBottomBarBlur,
-                                    onCheckedChange = {
-                                        enableFloatingBottomBarBlur = it
-                                        saveAndRefresh()
-                                    }
-                                )
-                            }
-                        }
-                    )
-                )
-
-                SegmentedColumn(
-                    modifier = Modifier.padding(top = 4.dp),
-                    content = listOf(
-                        {
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                                 SegmentedSwitchItem(
                                     icon = Icons.AutoMirrored.Rounded.MenuOpen,
