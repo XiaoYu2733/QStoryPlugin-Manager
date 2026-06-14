@@ -19,18 +19,26 @@ import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation3.runtime.NavKey
 import hai.qstory.plugin.manager.ui.component.FloatingBottomBar
 import hai.qstory.plugin.manager.ui.component.FloatingBottomBarItem
+import hai.qstory.plugin.manager.ui.screen.ColorPaletteScreen
+import hai.qstory.plugin.manager.ui.theme.AppSettings
+import hai.qstory.plugin.manager.ui.theme.AppTheme
+import hai.qstory.plugin.manager.ui.theme.LocalUiMode
+import hai.qstory.plugin.manager.ui.theme.UiMode
 import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.blur.rememberLayerBackdrop
@@ -41,13 +49,21 @@ import top.yukonga.miuix.kmp.basic.NavigationItem
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import androidx.compose.runtime.snapshots.SnapshotStateList
-import androidx.navigation3.runtime.NavKey
-import hai.qstory.plugin.manager.ui.screen.ColorPaletteScreen
-import hai.qstory.plugin.manager.ui.theme.AppSettings
-import hai.qstory.plugin.manager.ui.theme.AppTheme
-import hai.qstory.plugin.manager.ui.theme.LocalUiMode
-import hai.qstory.plugin.manager.ui.theme.UiMode
+
+private fun NavKey.toSaveString(): String = when (this) {
+    is Route.Main -> "main"
+    is Route.ColorPalette -> "color_palette"
+    is Route.PluginDetail -> "plugin_detail:${cloudId}"
+    else -> "main"
+}
+
+private fun String.toNavRoute(): Route = when {
+    this == "color_palette" -> Route.ColorPalette
+    this.startsWith("plugin_detail:") -> Route.PluginDetail(this.removePrefix("plugin_detail:"))
+    else -> Route.Main
+}
+
+private fun String.toNavKey(): NavKey = toNavRoute()
 
 @Composable
 fun App(
@@ -59,40 +75,48 @@ fun App(
     uiMode: UiMode = UiMode.Miuix,
 ) {
     CompositionLocalProvider(LocalUiMode provides uiMode) {
-        AppTheme(appSettings = appSettings, uiMode = uiMode) {
-            val coroutineScope = rememberCoroutineScope()
+        val coroutineScope = rememberCoroutineScope()
 
-            val navStack = remember { mutableStateListOf<NavKey>(Route.Main) }
-            var currentRoute by remember { mutableStateOf<NavKey>(Route.Main) }
+        // Navigation state is ABOVE AppTheme so it survives theme switches (Bug: UI style change)
+        // rememberSaveable so it survives Activity.recreate() (Bug: predictive back toggle)
+        var currentRouteStr by rememberSaveable { mutableStateOf("main") }
+        var navStackStr by rememberSaveable { mutableStateOf(listOf("main")) }
 
-            val navigator = remember {
-                object : AppNavigator {
-                    override val backStack: SnapshotStateList<NavKey> = navStack
-                    override fun push(route: NavKey) {
-                        navStack.add(route)
-                        currentRoute = route
+        val navigator = remember {
+            object : AppNavigator {
+                override val backStack: SnapshotStateList<NavKey>
+                    get() = mutableStateListOf<NavKey>().also {
+                        it.addAll(navStackStr.map { s -> s.toNavKey() })
                     }
-                    override fun pop() {
-                        if (navStack.size > 1) {
-                            currentRoute = navStack[navStack.size - 2]
-                            navStack.removeAt(navStack.lastIndex)
-                        }
-                    }
-                    override fun current() = currentRoute
+
+                override fun push(route: NavKey) {
+                    navStackStr = navStackStr + route.toSaveString()
+                    currentRouteStr = route.toSaveString()
                 }
+
+                override fun pop() {
+                    if (navStackStr.size > 1) {
+                        navStackStr = navStackStr.dropLast(1)
+                        currentRouteStr = navStackStr.last()
+                    }
+                }
+
+                override fun current(): NavKey = currentRouteStr.toNavKey()
             }
+        }
 
-            val pagerState = rememberPagerState(pageCount = { 4 })
+        val pagerState = rememberPagerState(pageCount = { 4 })
 
-            val navigationItems = remember {
-                listOf(
-                    NavigationItem("主页", Icons.Rounded.Cottage),
-                    NavigationItem("统计", Icons.Rounded.BarChart),
-                    NavigationItem("关于", Icons.Rounded.Extension),
-                    NavigationItem("设置", Icons.Rounded.Settings),
-                )
-            }
+        val navigationItems = remember {
+            listOf(
+                NavigationItem("主页", Icons.Rounded.Cottage),
+                NavigationItem("统计", Icons.Rounded.BarChart),
+                NavigationItem("关于", Icons.Rounded.Extension),
+                NavigationItem("设置", Icons.Rounded.Settings),
+            )
+        }
 
+        AppTheme(appSettings = appSettings, uiMode = uiMode) {
             val surfaceColor = MiuixTheme.colorScheme.surface
             val backdrop = rememberLayerBackdrop {
                 drawRect(surfaceColor)
