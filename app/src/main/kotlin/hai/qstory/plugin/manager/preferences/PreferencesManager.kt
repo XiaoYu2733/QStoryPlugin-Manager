@@ -42,6 +42,10 @@ object PreferencesManager {
         get() = prefs.getString("color_spec", ColorSpec.SpecVersion.Default.name) ?: ColorSpec.SpecVersion.Default.name
         set(value) = prefs.edit().putString("color_spec", value).apply()
 
+    var uiMode: String
+        get() = prefs.getString("ui_mode", hai.qstory.plugin.manager.ui.theme.UiMode.DEFAULT_VALUE) ?: hai.qstory.plugin.manager.ui.theme.UiMode.DEFAULT_VALUE
+        set(value) = prefs.edit().putString("ui_mode", value).apply()
+
     var enableBlur: Boolean
         get() = prefs.getBoolean("enable_blur", false)
         set(value) = prefs.edit().putBoolean("enable_blur", value).apply()

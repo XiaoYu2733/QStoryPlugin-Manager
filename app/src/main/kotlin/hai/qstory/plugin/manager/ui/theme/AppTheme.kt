@@ -8,7 +8,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.view.WindowInsetsControllerCompat
+import androidx.compose.material3.MaterialTheme
 import com.materialkolor.dynamiccolor.ColorSpec
+import com.materialkolor.rememberDynamicColorScheme
 import hai.qstory.plugin.manager.LocalColorMode
 import top.yukonga.miuix.kmp.theme.ColorSchemeMode
 import top.yukonga.miuix.kmp.theme.LocalContentColor
@@ -20,14 +22,14 @@ import top.yukonga.miuix.kmp.theme.ThemePaletteStyle
 @Composable
 fun isInDarkTheme(): Boolean {
     return when (LocalColorMode.current) {
-        1, 4 -> false  // Force light mode
-        2, 5, 6 -> true   // Force dark mode
-        else -> isSystemInDarkTheme()  // Follow system (0 or default)
+        1, 4 -> false
+        2, 5, 6 -> true
+        else -> isSystemInDarkTheme()
     }
 }
 
 @Composable
-fun AppTheme(
+fun MiuixAppTheme(
     appSettings: AppSettings,
     content: @Composable () -> Unit,
 ) {
@@ -79,4 +81,54 @@ fun AppTheme(
             }
         }
     )
+}
+
+@Composable
+fun MaterialAppTheme(
+    appSettings: AppSettings,
+    content: @Composable () -> Unit,
+) {
+    val context = LocalContext.current
+    val systemDarkTheme = isSystemInDarkTheme()
+    val darkTheme = appSettings.colorMode.isDark || (appSettings.colorMode.isSystem && systemDarkTheme)
+
+    val colorScheme = if (appSettings.keyColor == 0) {
+        rememberDynamicColorScheme(
+            seedColor = Color.Unspecified,
+            isDark = darkTheme,
+            style = appSettings.paletteStyle,
+            specVersion = appSettings.colorSpec,
+        )
+    } else {
+        rememberDynamicColorScheme(
+            seedColor = Color(appSettings.keyColor),
+            isDark = darkTheme,
+            style = appSettings.paletteStyle,
+            specVersion = appSettings.colorSpec,
+        )
+    }
+
+    LaunchedEffect(darkTheme) {
+        val window = (context as? Activity)?.window ?: return@LaunchedEffect
+        WindowInsetsControllerCompat(window, window.decorView).apply {
+            isAppearanceLightStatusBars = !darkTheme
+            isAppearanceLightNavigationBars = !darkTheme
+        }
+    }
+
+    MaterialTheme(colorScheme = colorScheme) {
+        MiuixAppTheme(appSettings, content)
+    }
+}
+
+@Composable
+fun AppTheme(
+    appSettings: AppSettings,
+    uiMode: UiMode = LocalUiMode.current,
+    content: @Composable () -> Unit,
+) {
+    when (uiMode) {
+        UiMode.Miuix -> MiuixAppTheme(appSettings, content)
+        UiMode.Material -> MaterialAppTheme(appSettings, content)
+    }
 }

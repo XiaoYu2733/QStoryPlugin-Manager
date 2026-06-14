@@ -25,6 +25,8 @@ import com.materialkolor.dynamiccolor.ColorSpec
 import hai.qstory.plugin.manager.preferences.PreferencesManager
 import hai.qstory.plugin.manager.ui.theme.AppSettings
 import hai.qstory.plugin.manager.ui.theme.ColorMode
+import hai.qstory.plugin.manager.ui.theme.LocalUiMode
+import hai.qstory.plugin.manager.ui.theme.UiMode
 
 val LocalColorMode = staticCompositionLocalOf { 0 }
 val LocalEnableBlur = staticCompositionLocalOf { false }
@@ -62,6 +64,7 @@ class MainActivity : ComponentActivity() {
             var enableFloatingBottomBar by remember { mutableStateOf(PreferencesManager.enableFloatingBottomBar) }
             var enableFloatingBottomBarBlur by remember { mutableStateOf(PreferencesManager.enableFloatingBottomBarBlur) }
             var enablePredictiveBack by remember { mutableStateOf(PreferencesManager.enablePredictiveBack) }
+            var uiModeStr by remember { mutableStateOf(PreferencesManager.uiMode) }
             var pageScale by remember { mutableFloatStateOf(PreferencesManager.pageScale) }
 
             // Reactive listener: updates state whenever prefs change (e.g. from ColorPaletteScreen)
@@ -76,6 +79,7 @@ class MainActivity : ComponentActivity() {
                     enableFloatingBottomBar = PreferencesManager.enableFloatingBottomBar
                     enableFloatingBottomBarBlur = PreferencesManager.enableFloatingBottomBarBlur
                     enablePredictiveBack = PreferencesManager.enablePredictiveBack
+                    uiModeStr = PreferencesManager.uiMode
                     pageScale = PreferencesManager.pageScale
                 }
                 PreferencesManager.registerListener(listener)
@@ -114,12 +118,15 @@ class MainActivity : ComponentActivity() {
                 Density(systemDensity.density * pageScale, systemDensity.fontScale)
             }
 
+            val uiMode = UiMode.fromValue(uiModeStr)
+
             CompositionLocalProvider(
                 LocalDensity provides density,
                 LocalColorMode provides colorModeValue,
                 LocalEnableBlur provides enableBlur,
                 LocalEnableFloatingBottomBar provides enableFloatingBottomBar,
                 LocalEnableFloatingBottomBarBlur provides enableFloatingBottomBarBlur,
+                LocalUiMode provides uiMode,
             ) {
                 App(
                     appSettings = appSettings,
@@ -127,6 +134,7 @@ class MainActivity : ComponentActivity() {
                     enableFloatingBottomBar = enableFloatingBottomBar,
                     enableFloatingBottomBarBlur = enableFloatingBottomBarBlur,
                     pageScale = pageScale,
+                    uiMode = uiMode,
                 )
             }
         }
