@@ -456,7 +456,7 @@ fun PluginDetailPage(
                         modifier = Modifier.fillMaxSize()
                     ) {
                     item {
-                        Spacer(modifier = Modifier.height(88.dp))
+                        Spacer(modifier = Modifier.height(96.dp))
                     }
 
                     // 头部大卡片
