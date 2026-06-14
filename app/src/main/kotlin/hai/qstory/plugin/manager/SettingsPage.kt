@@ -23,6 +23,16 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 fun SettingsPage(
     navigator: AppNavigator,
 ) {
+    when (LocalUiMode.current) {
+        UiMode.Material -> SettingsPageMaterial(navigator = navigator)
+        UiMode.Miuix -> SettingsPageMiuix(navigator = navigator)
+    }
+}
+
+@Composable
+fun SettingsPageMiuix(
+    navigator: AppNavigator,
+) {
     val uiMode = LocalUiMode.current
 
     LazyColumn(

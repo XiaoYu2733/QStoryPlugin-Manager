@@ -108,16 +108,11 @@ fun MaterialAppTheme(
         )
     }
 
-    LaunchedEffect(darkTheme) {
-        val window = (context as? Activity)?.window ?: return@LaunchedEffect
-        WindowInsetsControllerCompat(window, window.decorView).apply {
-            isAppearanceLightStatusBars = !darkTheme
-            isAppearanceLightNavigationBars = !darkTheme
-        }
-    }
-
     MaterialTheme(colorScheme = colorScheme) {
-        MiuixAppTheme(appSettings, content)
+        // MiuixAppTheme is kept so that Miuix components (Scaffold, Card, Text, etc.)
+        // used in HomePage, PluginDetailPage, and the outer App scaffold get proper
+        // dark/light + Monet colors instead of falling back to default light theme.
+        MiuixAppTheme(appSettings = appSettings, content = content)
     }
 }
 

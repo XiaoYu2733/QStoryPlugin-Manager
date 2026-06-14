@@ -78,6 +78,11 @@ import top.yukonga.miuix.kmp.icon.extended.Back
 import top.yukonga.miuix.kmp.icon.extended.Download
 import top.yukonga.miuix.kmp.icon.extended.Info
 import top.yukonga.miuix.kmp.icon.extended.Settings
+import hai.qstory.plugin.manager.ui.theme.LocalUiMode
+import hai.qstory.plugin.manager.ui.theme.UiMode
+import androidx.compose.material3.MaterialTheme as M3MaterialTheme
+import androidx.compose.material3.Text as M3Text
+import hai.qstory.plugin.manager.ui.component.AdaptiveCard
 
 sealed class DownloadState {
     data object Idle : DownloadState()
@@ -260,12 +265,8 @@ fun HomePage(
             }
         } else if (errorMessage != null) {
             item {
-                Card(
-                    modifier = Modifier.padding(16.dp)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp)
-                    ) {
+                AdaptiveCard(modifier = Modifier.padding(16.dp)) {
+                    Column(modifier = Modifier.padding(16.dp)) {
                         Text(text = "加载失败")
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
@@ -278,12 +279,8 @@ fun HomePage(
             }
         } else if (filteredPlugins.isEmpty()) {
             item {
-                Card(
-                    modifier = Modifier.padding(16.dp)
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp)
-                    ) {
+                AdaptiveCard(modifier = Modifier.padding(16.dp)) {
+                    Column(modifier = Modifier.padding(16.dp)) {
                         Text(text = "暂无脚本")
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
@@ -373,56 +370,42 @@ fun PluginCard(
     plugin: ScriptListItem,
     navigator: AppNavigator
 ) {
-    Card(
+    AdaptiveCard(
+        onClick = { navigator.push(Route.PluginDetail(plugin.cloudId)) },
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
-            .clip(RoundedCornerShape(16.dp)),
-        pressFeedbackType = top.yukonga.miuix.kmp.utils.PressFeedbackType.Sink,
-        showIndication = true,
-        onClick = {
-            navigator.push(Route.PluginDetail(plugin.cloudId))
-        }
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = plugin.name,
-                            style = MiuixTheme.textStyles.body1,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "v${plugin.version}",
-                            style = MiuixTheme.textStyles.body2,
-                            color = MiuixTheme.colorScheme.onSurfaceSecondary
-                        )
+        val (statusText, statusColor) = getStatusLabel(plugin)
+        if (LocalUiMode.current == UiMode.Material) {
+            Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            M3Text(text = plugin.name, style = M3MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            M3Text(text = "v${plugin.version}", style = M3MaterialTheme.typography.bodySmall, color = M3MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        M3Text(text = plugin.author, style = M3MaterialTheme.typography.bodyMedium, color = M3MaterialTheme.colorScheme.onSurfaceVariant)
                     }
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = plugin.author,
-                        style = MiuixTheme.textStyles.body2,
-                        color = MiuixTheme.colorScheme.onSurfaceSecondary
-                    )
+                    M3Text(text = statusText, fontSize = 11.sp, color = statusColor, fontWeight = FontWeight.Medium)
                 }
-                val (statusText, statusColor) = getStatusLabel(plugin)
-                Text(
-                    text = statusText,
-                    fontSize = 11.sp,
-                    color = statusColor,
-                    fontWeight = FontWeight.Medium
-                )
+            }
+        } else {
+            Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
+                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(text = plugin.name, style = MiuixTheme.textStyles.body1, fontWeight = FontWeight.Bold)
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(text = "v${plugin.version}", style = MiuixTheme.textStyles.body2, color = MiuixTheme.colorScheme.onSurfaceSecondary)
+                        }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(text = plugin.author, style = MiuixTheme.textStyles.body2, color = MiuixTheme.colorScheme.onSurfaceSecondary)
+                    }
+                    Text(text = statusText, fontSize = 11.sp, color = statusColor, fontWeight = FontWeight.Medium)
+                }
             }
         }
     }
@@ -564,7 +547,7 @@ fun PluginDetailPage(
 
                     // 头部大卡片
                     item {
-                        Card(
+                        AdaptiveCard(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(horizontal = 20.dp)
@@ -641,7 +624,7 @@ fun PluginDetailPage(
 
                     // 简介卡片
                     item {
-                        Card(
+                        AdaptiveCard(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(horizontal = 20.dp, vertical = 8.dp)
@@ -675,7 +658,7 @@ fun PluginDetailPage(
                     val images = plugin!!.images
                     if (images?.previewStatus == 1 && !images.previewFilename.isNullOrEmpty()) {
                         item {
-                            Card(
+                            AdaptiveCard(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(horizontal = 20.dp, vertical = 8.dp)
@@ -825,7 +808,7 @@ fun DownloadSuccessDialog(
             dismissOnClickOutside = false
         )
     ) {
-        Card(
+        AdaptiveCard(
             modifier = Modifier.fillMaxWidth()
         ) {
             Column(
@@ -877,7 +860,7 @@ fun AiReviewCard(
     aiReview: AiReviewRecord?,
     isLoading: Boolean
 ) {
-    Card(
+    AdaptiveCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 20.dp, vertical = 8.dp)
@@ -942,7 +925,7 @@ fun AiReviewCard(
                     }
                 }
                 aiReview.reviewStatus == 1 -> {
-                    val result = aiReview.reviewResult ?: return@Card
+                    val result = aiReview.reviewResult ?: return@AdaptiveCard
 
                     // 风险等级摘要
                     RiskSummary(

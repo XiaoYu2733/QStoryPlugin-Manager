@@ -62,6 +62,8 @@ import com.materialkolor.dynamiccolor.ColorSpec
 import hai.qstory.plugin.manager.preferences.PreferencesManager
 import hai.qstory.plugin.manager.ui.component.ScaleDialog
 import hai.qstory.plugin.manager.ui.theme.ColorMode
+import hai.qstory.plugin.manager.ui.theme.LocalUiMode
+import hai.qstory.plugin.manager.ui.theme.UiMode
 import hai.qstory.plugin.manager.ui.theme.keyColorOptions
 import hai.qstory.plugin.manager.ui.util.BlurredBar
 import hai.qstory.plugin.manager.ui.util.rememberBlurBackdrop
@@ -87,6 +89,16 @@ import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 
 @Composable
 fun ColorPaletteScreen(
+    onBack: () -> Unit,
+) {
+    when (LocalUiMode.current) {
+        UiMode.Material -> ColorPaletteScreenMaterial(onBack = onBack)
+        UiMode.Miuix -> ColorPaletteScreenMiuix(onBack = onBack)
+    }
+}
+
+@Composable
+fun ColorPaletteScreenMiuix(
     onBack: () -> Unit,
 ) {
     val context = LocalContext.current

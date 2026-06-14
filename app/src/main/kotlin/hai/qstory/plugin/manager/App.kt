@@ -31,6 +31,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.material3.NavigationBar as M3NavigationBar
+import androidx.compose.material3.NavigationBarItem as M3NavigationBarItem
 import androidx.navigation3.runtime.NavKey
 import hai.qstory.plugin.manager.ui.component.FloatingBottomBar
 import hai.qstory.plugin.manager.ui.component.FloatingBottomBarItem
@@ -127,7 +129,31 @@ fun App(
                 modifier = Modifier.fillMaxSize(),
                 bottomBar = {
                     if (navigator.current() == Route.Main) {
-                        if (enableFloatingBottomBar) {
+                        if (uiMode == UiMode.Material) {
+                            M3NavigationBar {
+                                navigationItems.forEachIndexed { index, item ->
+                                    M3NavigationBarItem(
+                                        selected = pagerState.currentPage == index,
+                                        onClick = {
+                                            coroutineScope.launch {
+                                                pagerState.animateScrollToPage(index)
+                                            }
+                                        },
+                                        icon = {
+                                            androidx.compose.material3.Icon(
+                                                imageVector = item.icon,
+                                                contentDescription = item.label,
+                                            )
+                                        },
+                                        label = {
+                                            androidx.compose.material3.Text(
+                                                text = item.label,
+                                            )
+                                        },
+                                    )
+                                }
+                            }
+                        } else if (enableFloatingBottomBar) {
                             Box(
                                 modifier = Modifier.fillMaxWidth()
                             ) {
