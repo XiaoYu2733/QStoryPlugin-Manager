@@ -26,9 +26,10 @@ fun AdaptiveCard(
                 onClick = onClick,
                 modifier = modifier,
                 enabled = enabled,
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(0.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp)
+                    containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp),
+                    contentColor = MaterialTheme.colorScheme.onSurface,
                 ),
             ) {
                 content()
@@ -56,9 +57,10 @@ fun AdaptiveCard(
         UiMode.Material -> {
             M3Card(
                 modifier = modifier,
-                shape = RoundedCornerShape(16.dp),
+                shape = RoundedCornerShape(0.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp)
+                    containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp),
+                    contentColor = MaterialTheme.colorScheme.onSurface,
                 ),
             ) {
                 content()

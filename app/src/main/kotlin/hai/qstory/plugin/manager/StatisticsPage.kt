@@ -27,13 +27,17 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import hai.qstory.plugin.manager.data.PlatformStatistics
 import hai.qstory.plugin.manager.network.RetrofitClient
+import hai.qstory.plugin.manager.ui.component.AdaptiveCard
+import hai.qstory.plugin.manager.ui.component.AdaptiveInfiniteProgressIndicator
+import hai.qstory.plugin.manager.ui.component.AdaptiveSmallTitle
+import hai.qstory.plugin.manager.ui.component.AdaptiveText
+import hai.qstory.plugin.manager.ui.component.adaptiveOnSurfaceVariantSummary
+import hai.qstory.plugin.manager.ui.component.adaptivePrimaryColor
+import hai.qstory.plugin.manager.ui.theme.LocalUiMode
+import hai.qstory.plugin.manager.ui.theme.UiMode
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.InfiniteProgressIndicator
 import top.yukonga.miuix.kmp.basic.LinearProgressIndicator
-import top.yukonga.miuix.kmp.basic.SmallTitle
-import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
@@ -71,9 +75,7 @@ fun StatisticsPage() {
                             .height(400.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        InfiniteProgressIndicator(
-                            color = MiuixTheme.colorScheme.primary
-                        )
+                        AdaptiveInfiniteProgressIndicator()
                     }
                 }
             }
@@ -83,9 +85,9 @@ fun StatisticsPage() {
                         modifier = Modifier.fillMaxWidth().padding(top = 80.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(
+                        AdaptiveText(
                             text = "加载失败: $errorMessage",
-                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary
+                            color = adaptiveOnSurfaceVariantSummary()
                         )
                     }
                 }
@@ -93,55 +95,32 @@ fun StatisticsPage() {
             stats != null -> {
                 val data = stats!!
 
-                // ── 平台统计总览 ──
-                item { SmallTitle(text = "平台统计总览") }
-                item {
-                    OverviewCards(data)
-                }
+                item { AdaptiveSmallTitle(text = "平台统计总览") }
+                item { OverviewCards(data) }
 
-                // ── 脚本与审核 ──
-                item { SmallTitle(text = "脚本与审核") }
-                item {
-                    ScriptAuditCards(data)
-                }
+                item { AdaptiveSmallTitle(text = "脚本与审核") }
+                item { ScriptAuditCards(data) }
 
-                // ── AI 评审统计 ──
-                item { SmallTitle(text = "AI 评审统计") }
-                item {
-                    AiReviewCards(data)
-                }
+                item { AdaptiveSmallTitle(text = "AI 评审统计") }
+                item { AiReviewCards(data) }
 
-                // ── 用户与互动 ──
-                item { SmallTitle(text = "用户与互动") }
-                item {
-                    UserInteractionCards(data)
-                }
+                item { AdaptiveSmallTitle(text = "用户与互动") }
+                item { UserInteractionCards(data) }
 
-                // ── 近期活跃度 ──
-                item { SmallTitle(text = "近期活跃度") }
-                item {
-                    RecentActivityCards(data)
-                }
+                item { AdaptiveSmallTitle(text = "近期活跃度") }
+                item { RecentActivityCards(data) }
 
-                // ── AI 风险分布 ──
-                item { SmallTitle(text = "AI 风险分布") }
-                item {
-                    RiskDistributionCard(data)
-                }
+                item { AdaptiveSmallTitle(text = "AI 风险分布") }
+                item { RiskDistributionCard(data) }
 
-                // ── 标签分布 ──
-                item { SmallTitle(text = "标签分布") }
-                item {
-                    TagDistributionCard(data)
-                }
+                item { AdaptiveSmallTitle(text = "标签分布") }
+                item { TagDistributionCard(data) }
 
-                item { Spacer(modifier = Modifier.height(12.dp)) }
+                item { Spacer(modifier = Modifier.height(80.dp)) }
             }
         }
     }
 }
-
-// ── Overview cards (horizontal scroll) ──
 
 @Composable
 private fun OverviewCards(data: PlatformStatistics) {
@@ -150,48 +129,39 @@ private fun OverviewCards(data: PlatformStatistics) {
         contentPadding = PaddingValues(horizontal = 12.dp),
         horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        item { StatItemCard("累计下载", formatNumber(data.downloads.total), MiuixTheme.colorScheme.primary) }
-        item { StatItemCard("脚本总数", "${data.scripts.total}", MiuixTheme.colorScheme.primary) }
-        item { StatItemCard("审核总数", "${data.audits.total}", MiuixTheme.colorScheme.primary) }
-        item { StatItemCard("AI 评审", "${data.aiReviews.total}", MiuixTheme.colorScheme.primary) }
-        item { StatItemCard("评论总数", "${data.comments.total}", MiuixTheme.colorScheme.primary) }
+        item { StatItemCard("累计下载", formatNumber(data.downloads.total), adaptivePrimaryColor()) }
+        item { StatItemCard("脚本总数", "${data.scripts.total}", adaptivePrimaryColor()) }
+        item { StatItemCard("审核总数", "${data.audits.total}", adaptivePrimaryColor()) }
+        item { StatItemCard("AI 评审", "${data.aiReviews.total}", adaptivePrimaryColor()) }
+        item { StatItemCard("评论总数", "${data.comments.total}", adaptivePrimaryColor()) }
     }
 }
 
 @Composable
 private fun StatItemCard(label: String, value: String, accentColor: androidx.compose.ui.graphics.Color) {
-    Card(
-        modifier = Modifier.width(130.dp)
-    ) {
+    AdaptiveCard(modifier = Modifier.width(130.dp)) {
         Column(
             modifier = Modifier.padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(
-                text = value,
-                style = MiuixTheme.textStyles.body1,
-                fontWeight = FontWeight.Bold,
-                color = accentColor,
-                textAlign = TextAlign.Center
+            AdaptiveText(
+                text = label,
+                color = adaptiveOnSurfaceVariantSummary(),
             )
             Spacer(modifier = Modifier.height(4.dp))
-            Text(
-                text = label,
-                style = MiuixTheme.textStyles.body2,
-                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                textAlign = TextAlign.Center
+            AdaptiveText(
+                text = value,
+                fontWeight = FontWeight.Bold,
+                color = accentColor,
+                modifier = Modifier.fillMaxWidth(),
             )
         }
     }
 }
 
-// ── Script & Audit section ──
-
 @Composable
 private fun ScriptAuditCards(data: PlatformStatistics) {
-    Card(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp)
-    ) {
+    AdaptiveCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp)) {
         Column(modifier = Modifier.padding(16.dp)) {
             StatRow("在线脚本", "${data.scripts.online}")
             StatRow("已下架脚本", "${data.scripts.offline}")
@@ -207,13 +177,9 @@ private fun ScriptAuditCards(data: PlatformStatistics) {
     }
 }
 
-// ── AI Review section ──
-
 @Composable
 private fun AiReviewCards(data: PlatformStatistics) {
-    Card(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp)
-    ) {
+    AdaptiveCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp)) {
         Column(modifier = Modifier.padding(16.dp)) {
             StatRow("AI 评审成功", "${data.aiReviews.success}")
             StatRow("AI 评审失败", "${data.aiReviews.failed}")
@@ -223,13 +189,9 @@ private fun AiReviewCards(data: PlatformStatistics) {
     }
 }
 
-// ── User & Interaction section ──
-
 @Composable
 private fun UserInteractionCards(data: PlatformStatistics) {
-    Card(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp)
-    ) {
+    AdaptiveCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp)) {
         Column(modifier = Modifier.padding(16.dp)) {
             StatRow("活跃评论", "${data.comments.active}")
             StatRow("评论总数", "${data.comments.total}")
@@ -240,13 +202,9 @@ private fun UserInteractionCards(data: PlatformStatistics) {
     }
 }
 
-// ── Recent Activity section ──
-
 @Composable
 private fun RecentActivityCards(data: PlatformStatistics) {
-    Card(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp)
-    ) {
+    AdaptiveCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp)) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(16.dp),
             horizontalArrangement = Arrangement.SpaceEvenly
@@ -261,30 +219,24 @@ private fun RecentActivityCards(data: PlatformStatistics) {
 @Composable
 private fun ActivityColumn(label: String, count: Int) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(
+        AdaptiveText(
             text = "$count",
-            style = MiuixTheme.textStyles.body1,
             fontWeight = FontWeight.Bold,
-            color = MiuixTheme.colorScheme.primary
+            color = adaptivePrimaryColor()
         )
         Spacer(modifier = Modifier.height(4.dp))
-        Text(
+        AdaptiveText(
             text = label,
-            style = MiuixTheme.textStyles.body2,
-            color = MiuixTheme.colorScheme.onSurfaceVariantSummary
+            color = adaptiveOnSurfaceVariantSummary()
         )
     }
 }
-
-// ── Risk Distribution with progress bars ──
 
 @Composable
 private fun RiskDistributionCard(data: PlatformStatistics) {
     val risk = data.aiReviews.riskDistribution
     val total = (risk.low + risk.medium + risk.high).toFloat()
-    Card(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp)
-    ) {
+    AdaptiveCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp)) {
         Column(modifier = Modifier.padding(16.dp)) {
             ProgressBarRow("低风险", risk.low, risk.low / total, 0xFF4CAF50.toInt())
             Spacer(modifier = Modifier.height(12.dp))
@@ -295,14 +247,10 @@ private fun RiskDistributionCard(data: PlatformStatistics) {
     }
 }
 
-// ── Tag Distribution with progress bars ──
-
 @Composable
 private fun TagDistributionCard(data: PlatformStatistics) {
     val maxCount = data.tags.values.maxOrNull()?.toFloat() ?: 1f
-    Card(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp)
-    ) {
+    AdaptiveCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp)) {
         Column(modifier = Modifier.padding(16.dp)) {
             data.tags.entries.sortedByDescending { it.value }.forEachIndexed { index, (tag, count) ->
                 ProgressBarRow(tag, count, count / maxCount, null)
@@ -321,15 +269,13 @@ private fun ProgressBarRow(label: String, count: Int, progress: Float, colorArgb
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(
+            AdaptiveText(
                 text = label,
-                style = MiuixTheme.textStyles.body2,
                 fontWeight = FontWeight.Medium
             )
-            Text(
+            AdaptiveText(
                 text = "$count",
-                style = MiuixTheme.textStyles.body2,
-                color = MiuixTheme.colorScheme.onSurfaceVariantSummary
+                color = adaptiveOnSurfaceVariantSummary()
             )
         }
         Spacer(modifier = Modifier.height(4.dp))
@@ -340,23 +286,17 @@ private fun ProgressBarRow(label: String, count: Int, progress: Float, colorArgb
     }
 }
 
-// ── Helpers ──
-
 @Composable
 private fun StatRow(label: String, value: String) {
     Row(
         modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(
-            text = label,
-            style = MiuixTheme.textStyles.body2
-        )
-        Text(
+        AdaptiveText(text = label)
+        AdaptiveText(
             text = value,
-            style = MiuixTheme.textStyles.body2,
             fontWeight = FontWeight.Medium,
-            color = MiuixTheme.colorScheme.onSurfaceVariantSummary
+            color = adaptiveOnSurfaceVariantSummary()
         )
     }
 }

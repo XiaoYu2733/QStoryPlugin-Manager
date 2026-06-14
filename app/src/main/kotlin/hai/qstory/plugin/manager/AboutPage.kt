@@ -274,7 +274,7 @@ fun AboutPage() {
         }
 
         item {
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(80.dp))
         }
     }
 }

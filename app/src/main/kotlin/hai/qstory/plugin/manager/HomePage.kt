@@ -61,28 +61,32 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.HorizontalDivider
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.InfiniteProgressIndicator
 import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.blur.layerBackdrop
-import top.yukonga.miuix.kmp.basic.TopAppBar
-import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Back
 import top.yukonga.miuix.kmp.icon.extended.Download
-import top.yukonga.miuix.kmp.icon.extended.Info
-import top.yukonga.miuix.kmp.icon.extended.Settings
 import hai.qstory.plugin.manager.ui.theme.LocalUiMode
 import hai.qstory.plugin.manager.ui.theme.UiMode
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 import androidx.compose.material3.Text as M3Text
 import hai.qstory.plugin.manager.ui.component.AdaptiveCard
+import hai.qstory.plugin.manager.ui.component.AdaptiveTextField
+import hai.qstory.plugin.manager.ui.component.AdaptiveButton
+import hai.qstory.plugin.manager.ui.component.AdaptiveInfiniteProgressIndicator
+import hai.qstory.plugin.manager.ui.component.AdaptiveText
+import hai.qstory.plugin.manager.ui.component.AdaptiveDropdownField
+import hai.qstory.plugin.manager.ui.component.adaptiveOnSecondaryContainer
+import hai.qstory.plugin.manager.ui.component.adaptiveOnSurfaceSecondary
+import hai.qstory.plugin.manager.ui.component.adaptiveOnSurfaceVariantSummary
+import hai.qstory.plugin.manager.ui.component.adaptivePrimaryColor
+import hai.qstory.plugin.manager.ui.component.adaptiveSecondaryContainer
+import androidx.compose.material3.CircularProgressIndicator
 
 sealed class DownloadState {
     data object Idle : DownloadState()
@@ -141,8 +145,6 @@ fun HomePage(
     var selectedTag by remember { mutableStateOf("全部") }
     var selectedStatus by remember { mutableStateOf("全部状态") }
     var searchText by remember { mutableStateOf("") }
-    var showTagDialog by remember { mutableStateOf(false) }
-    var showStatusDialog by remember { mutableStateOf(false) }
 
     val statusOptions = listOf("全部状态", "待审核", "已通过", "未通过")
 
@@ -183,68 +185,33 @@ fun HomePage(
                     .fillMaxWidth()
                     .padding(16.dp)
             ) {
+                AdaptiveTextField(
+                    value = searchText,
+                    onValueChange = { searchText = it },
+                    label = "搜索脚本",
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    TextField(
-                        value = searchText,
-                        onValueChange = { searchText = it },
-                        label = "搜索脚本",
+                    AdaptiveDropdownField(
+                        selectedText = selectedStatus,
+                        items = statusOptions,
+                        onItemSelected = { index ->
+                            selectedStatus = statusOptions[index]
+                        },
                         modifier = Modifier.weight(1f)
                     )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Button(
-                        onClick = { showStatusDialog = !showStatusDialog },
-                        modifier = Modifier
-                            .height(56.dp)
-                            .width(100.dp)
-                    ) {
-                        Text(selectedStatus)
-                    }
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Button(
-                        onClick = { showTagDialog = !showTagDialog },
-                        modifier = Modifier
-                            .height(56.dp)
-                            .width(100.dp)
-                    ) {
-                        Text(selectedTag)
-                    }
-                }
-
-                if (showStatusDialog) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Column {
-                        statusOptions.forEach { status ->
-                            StatusOptionButton(
-                                label = status,
-                                selectedStatus = selectedStatus,
-                                onClick = {
-                                    selectedStatus = status
-                                    showStatusDialog = false
-                                }
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                        }
-                    }
-                }
-
-                if (showTagDialog) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Column {
-                        SCRIPT_TAGS.forEach { tag ->
-                            TagOptionButton(
-                                label = tag,
-                                selectedTag = selectedTag,
-                                onClick = {
-                                    selectedTag = tag
-                                    showTagDialog = false
-                                }
-                            )
-                            Spacer(modifier = Modifier.height(4.dp))
-                        }
-                    }
+                    AdaptiveDropdownField(
+                        selectedText = selectedTag,
+                        items = SCRIPT_TAGS,
+                        onItemSelected = { index ->
+                            selectedTag = SCRIPT_TAGS[index]
+                        },
+                        modifier = Modifier.weight(1f)
+                    )
                 }
             }
         }
@@ -258,21 +225,18 @@ fun HomePage(
                         .height(400.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    InfiniteProgressIndicator(
-                        color = MiuixTheme.colorScheme.primary
-                    )
+                    AdaptiveInfiniteProgressIndicator()
                 }
             }
         } else if (errorMessage != null) {
             item {
                 AdaptiveCard(modifier = Modifier.padding(16.dp)) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text(text = "加载失败")
+                        AdaptiveText(text = "加载失败")
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text(
+                        AdaptiveText(
                             text = errorMessage ?: "未知错误",
-                            style = MiuixTheme.textStyles.body2,
-                            color = MiuixTheme.colorScheme.onSurfaceSecondary
+                            color = adaptiveOnSurfaceSecondary()
                         )
                     }
                 }
@@ -281,16 +245,15 @@ fun HomePage(
             item {
                 AdaptiveCard(modifier = Modifier.padding(16.dp)) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text(text = "暂无脚本")
+                        AdaptiveText(text = "暂无脚本")
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text(
+                        AdaptiveText(
                             text = if (searchText.isNotBlank() || selectedTag != "全部" || selectedStatus != "全部状态") {
                                 "未找到匹配的脚本"
                             } else {
                                 "这里是存放脚本的页面"
                             },
-                            style = MiuixTheme.textStyles.body2,
-                            color = MiuixTheme.colorScheme.onSurfaceSecondary
+                            color = adaptiveOnSurfaceSecondary()
                         )
                     }
                 }
@@ -303,54 +266,8 @@ fun HomePage(
                 )
             }
         }
-    }
-}
 
-@Composable
-fun TagOptionButton(
-    label: String,
-    selectedTag: String,
-    onClick: () -> Unit
-) {
-    val isSelected = selectedTag == label
-    Button(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(label)
-            if (isSelected) {
-                Text("✓")
-            }
-        }
-    }
-}
-
-@Composable
-fun StatusOptionButton(
-    label: String,
-    selectedStatus: String,
-    onClick: () -> Unit
-) {
-    val isSelected = selectedStatus == label
-    Button(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(label)
-            if (isSelected) {
-                Text("✓")
-            }
-        }
+        item { Spacer(modifier = Modifier.height(80.dp)) }
     }
 }
 
@@ -382,7 +299,7 @@ fun PluginCard(
                 Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Column(modifier = Modifier.weight(1f)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            M3Text(text = plugin.name, style = M3MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                            M3Text(text = plugin.name, style = M3MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = M3MaterialTheme.colorScheme.onSurface)
                             Spacer(modifier = Modifier.width(8.dp))
                             M3Text(text = "v${plugin.version}", style = M3MaterialTheme.typography.bodySmall, color = M3MaterialTheme.colorScheme.onSurfaceVariant)
                         }
@@ -399,10 +316,10 @@ fun PluginCard(
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(text = plugin.name, style = MiuixTheme.textStyles.body1, fontWeight = FontWeight.Bold)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text(text = "v${plugin.version}", style = MiuixTheme.textStyles.body2, color = MiuixTheme.colorScheme.onSurfaceSecondary)
+                            Text(text = "v${plugin.version}", style = MiuixTheme.textStyles.body2, color = adaptiveOnSurfaceSecondary())
                         }
                         Spacer(modifier = Modifier.height(4.dp))
-                        Text(text = plugin.author, style = MiuixTheme.textStyles.body2, color = MiuixTheme.colorScheme.onSurfaceSecondary)
+                        Text(text = plugin.author, style = MiuixTheme.textStyles.body2, color = adaptiveOnSurfaceSecondary())
                     }
                     Text(text = statusText, fontSize = 11.sp, color = statusColor, fontWeight = FontWeight.Medium)
                 }
@@ -519,9 +436,7 @@ fun PluginDetailPage(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        InfiniteProgressIndicator(
-                            color = MiuixTheme.colorScheme.primary
-                        )
+                        AdaptiveInfiniteProgressIndicator()
                     }
                 }
                 plugin == null -> {
@@ -529,10 +444,9 @@ fun PluginDetailPage(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(
+                        AdaptiveText(
                             text = "脚本不存在",
-                            style = MiuixTheme.textStyles.body2,
-                            color = MiuixTheme.colorScheme.onSurfaceSecondary
+                            color = adaptiveOnSurfaceSecondary()
                         )
                     }
                 }
@@ -580,42 +494,38 @@ fun PluginDetailPage(
                                     }
 
                                     Column {
-                                        Text(
+                                        AdaptiveText(
                                             text = plugin!!.name,
-                                            style = MiuixTheme.textStyles.body1.copy(fontSize = 24.sp),
+                                            fontSize = 24.sp,
                                             fontWeight = FontWeight.Bold
                                         )
                                         Spacer(modifier = Modifier.height(4.dp))
-                                        Text(
+                                        AdaptiveText(
                                             text = "v${plugin!!.version}",
-                                            style = MiuixTheme.textStyles.body2,
-                                            color = MiuixTheme.colorScheme.onSurfaceSecondary
+                                            color = adaptiveOnSurfaceSecondary()
                                         )
                                     }
                                 }
 
                                 Spacer(modifier = Modifier.height(20.dp))
 
-                                Text(
+                                AdaptiveText(
                                     text = "作者: ${plugin!!.author}",
-                                    style = MiuixTheme.textStyles.body2,
-                                    color = MiuixTheme.colorScheme.onSurfaceSecondary
+                                    color = adaptiveOnSurfaceSecondary()
                                 )
 
                                 Spacer(modifier = Modifier.height(12.dp))
 
-                                Text(
+                                AdaptiveText(
                                     text = "ID: ${plugin!!.pluginId}",
-                                    style = MiuixTheme.textStyles.body2,
-                                    color = MiuixTheme.colorScheme.onSurfaceSecondary
+                                    color = adaptiveOnSurfaceSecondary()
                                 )
 
                                 if (plugin!!.tags.isNotEmpty()) {
                                     Spacer(modifier = Modifier.height(12.dp))
-                                    Text(
+                                    AdaptiveText(
                                         text = "标签：${plugin!!.tags.joinToString(" ")}",
-                                        style = MiuixTheme.textStyles.body2,
-                                        color = MiuixTheme.colorScheme.onSurfaceSecondary
+                                        color = adaptiveOnSurfaceSecondary()
                                     )
                                 }
                             }
@@ -632,17 +542,15 @@ fun PluginDetailPage(
                             Column(
                                 modifier = Modifier.padding(18.dp)
                             ) {
-                                Text(
+                                AdaptiveText(
                                     text = "简介",
-                                    style = MiuixTheme.textStyles.body2,
-                                    color = MiuixTheme.colorScheme.onSurfaceSecondary
+                                    color = adaptiveOnSurfaceSecondary()
                                 )
                                 Spacer(modifier = Modifier.height(10.dp))
                                 SelectionContainer {
-                                    Text(
+                                    AdaptiveText(
                                         text = plugin!!.description,
-                                        style = MiuixTheme.textStyles.body1,
-                                        lineHeight = 22.sp
+                                        fontSize = 16.sp
                                     )
                                 }
                             }
@@ -669,16 +577,15 @@ fun PluginDetailPage(
                                     Row(
                                         verticalAlignment = Alignment.CenterVertically
                                     ) {
-                                        Text(
+                                        AdaptiveText(
                                             text = "预览图",
-                                            style = MiuixTheme.textStyles.body2,
-                                            color = MiuixTheme.colorScheme.onSurfaceSecondary
+                                            color = adaptiveOnSurfaceSecondary()
                                         )
                                         Spacer(modifier = Modifier.width(8.dp))
-                                        Text(
+                                        AdaptiveText(
                                             text = "右滑显示更多",
                                             fontSize = 11.sp,
-                                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary
+                                            color = adaptiveOnSurfaceVariantSummary()
                                         )
                                     }
                                     Spacer(modifier = Modifier.height(10.dp))
@@ -743,9 +650,8 @@ fun PluginDetailPage(
                 }
 
                 if (showTopBar && plugin != null) {
-                    Text(
+                    AdaptiveText(
                         text = plugin!!.name,
-                        style = MiuixTheme.textStyles.body1,
                         fontWeight = FontWeight.Medium,
                         maxLines = 1,
                         modifier = Modifier.weight(1f).padding(horizontal = 12.dp)
@@ -756,10 +662,9 @@ fun PluginDetailPage(
 
                 when {
                     isDownloading -> {
-                        Text(
+                        AdaptiveText(
                             text = "${downloadProgress}%",
-                            style = MiuixTheme.textStyles.body2,
-                            color = MiuixTheme.colorScheme.primary,
+                            color = adaptivePrimaryColor(),
                             modifier = Modifier.padding(end = 16.dp)
                         )
                     }
@@ -815,21 +720,18 @@ fun DownloadSuccessDialog(
                 modifier = Modifier.padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(
+                AdaptiveText(
                     text = "下载成功",
-                    style = MiuixTheme.textStyles.body1,
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.height(16.dp))
-                Text(
+                AdaptiveText(
                     text = "脚本已下载到以下目录，点击可复制",
-                    style = MiuixTheme.textStyles.body2,
-                    color = MiuixTheme.colorScheme.onSurfaceSecondary
+                    color = adaptiveOnSurfaceSecondary()
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                Text(
+                AdaptiveText(
                     text = dirPath,
-                    style = MiuixTheme.textStyles.body2,
                     fontWeight = FontWeight.Medium,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -844,11 +746,11 @@ fun DownloadSuccessDialog(
                         .padding(12.dp)
                 )
                 Spacer(modifier = Modifier.height(20.dp))
-                Button(
+                AdaptiveButton(
                     onClick = onDismiss,
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("确定")
+                    AdaptiveText(text = "确定")
                 }
             }
         }
@@ -866,9 +768,8 @@ fun AiReviewCard(
             .padding(horizontal = 20.dp, vertical = 8.dp)
     ) {
         Column(modifier = Modifier.padding(18.dp)) {
-            Text(
+            AdaptiveText(
                 text = "AI 评审",
-                style = MiuixTheme.textStyles.body1,
                 fontWeight = FontWeight.Bold
             )
             Spacer(modifier = Modifier.height(12.dp))
@@ -876,51 +777,43 @@ fun AiReviewCard(
             when {
                 isLoading -> {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        InfiniteProgressIndicator(
-                            modifier = Modifier.size(20.dp),
-                            color = MiuixTheme.colorScheme.primary
-                        )
+                        AdaptiveInfiniteProgressIndicator(modifier = Modifier.size(20.dp))
                         Spacer(modifier = Modifier.width(12.dp))
-                        Text(
+                        AdaptiveText(
                             text = "加载中...",
-                            style = MiuixTheme.textStyles.body2,
-                            color = MiuixTheme.colorScheme.onSurfaceSecondary
+                            color = adaptiveOnSurfaceSecondary()
                         )
                     }
                 }
                 aiReview == null -> {
-                    Text(
+                    AdaptiveText(
                         text = "该脚本尚未进行 AI 评审",
-                        style = MiuixTheme.textStyles.body2,
-                        color = MiuixTheme.colorScheme.onSurfaceSecondary
+                        color = adaptiveOnSurfaceSecondary()
                     )
                 }
                 aiReview.reviewStatus == 0 -> {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        InfiniteProgressIndicator(
+                        CircularProgressIndicator(
                             modifier = Modifier.size(20.dp),
                             color = Color(0xFFFF9800)
                         )
                         Spacer(modifier = Modifier.width(12.dp))
-                        Text(
+                        AdaptiveText(
                             text = "AI 评审中，请稍后查看...",
-                            style = MiuixTheme.textStyles.body2,
                             color = Color(0xFFFF9800)
                         )
                     }
                 }
                 aiReview.reviewStatus == 2 -> {
-                    Text(
+                    AdaptiveText(
                         text = "AI 评审失败",
-                        style = MiuixTheme.textStyles.body2,
                         color = Color(0xFFF44336)
                     )
                     if (!aiReview.errorMessage.isNullOrEmpty()) {
                         Spacer(modifier = Modifier.height(6.dp))
-                        Text(
+                        AdaptiveText(
                             text = aiReview.errorMessage,
-                            style = MiuixTheme.textStyles.body2,
-                            color = MiuixTheme.colorScheme.onSurfaceSecondary
+                            color = adaptiveOnSurfaceSecondary()
                         )
                     }
                 }
@@ -956,15 +849,13 @@ fun AiReviewCard(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text(
+                        AdaptiveText(
                             text = "模型: ${aiReview.modelUsed ?: "未知"}",
-                            style = MiuixTheme.textStyles.body2,
-                            color = MiuixTheme.colorScheme.onSurfaceSecondary
+                            color = adaptiveOnSurfaceSecondary()
                         )
-                        Text(
+                        AdaptiveText(
                             text = "Token: ${aiReview.tokensUsed ?: 0}",
-                            style = MiuixTheme.textStyles.body2,
-                            color = MiuixTheme.colorScheme.onSurfaceSecondary
+                            color = adaptiveOnSurfaceSecondary()
                         )
                     }
                 }
@@ -1000,15 +891,14 @@ private fun RiskSummary(
                 .background(riskColor.copy(alpha = 0.15f))
                 .padding(horizontal = 10.dp, vertical = 4.dp)
         ) {
-            Text(
+            AdaptiveText(
                 text = riskLabel,
-                style = MiuixTheme.textStyles.body2,
                 fontWeight = FontWeight.Medium,
                 color = riskColor
             )
         }
         Spacer(modifier = Modifier.width(10.dp))
-        Text(
+        AdaptiveText(
             text = if (passed) "合规通过" else "存在严重问题",
             fontSize = 12.sp,
             color = if (passed) Color(0xFF4CAF50) else Color(0xFFF44336)
@@ -1017,10 +907,9 @@ private fun RiskSummary(
 
     if (!summary.isNullOrEmpty()) {
         Spacer(modifier = Modifier.height(10.dp))
-        Text(
+        AdaptiveText(
             text = summary,
-            style = MiuixTheme.textStyles.body2,
-            lineHeight = 20.sp
+            fontSize = 14.sp
         )
     }
 }
@@ -1028,9 +917,8 @@ private fun RiskSummary(
 @Composable
 private fun IssuesList(issues: List<ComplianceIssue>) {
     Column {
-        Text(
+        AdaptiveText(
             text = "发现的问题 (${issues.size})",
-            style = MiuixTheme.textStyles.body2,
             fontWeight = FontWeight.Bold
         )
         Spacer(modifier = Modifier.height(8.dp))
@@ -1062,7 +950,6 @@ private fun IssueItem(issue: ComplianceIssue) {
         Column(
             modifier = Modifier.padding(12.dp)
         ) {
-            // 级别 + 分类
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     modifier = Modifier
@@ -1070,7 +957,7 @@ private fun IssueItem(issue: ComplianceIssue) {
                         .background(levelColor.copy(alpha = 0.15f))
                         .padding(horizontal = 8.dp, vertical = 3.dp)
                 ) {
-                    Text(
+                    AdaptiveText(
                         text = levelLabel,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.SemiBold,
@@ -1078,33 +965,30 @@ private fun IssueItem(issue: ComplianceIssue) {
                     )
                 }
                 Spacer(modifier = Modifier.width(8.dp))
-                Text(
+                AdaptiveText(
                     text = issue.category,
                     fontSize = 11.sp,
-                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary
+                    color = adaptiveOnSurfaceVariantSummary()
                 )
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // 问题描述
-            Text(
+            AdaptiveText(
                 text = issue.message,
-                style = MiuixTheme.textStyles.body2,
-                lineHeight = 18.sp
+                fontSize = 14.sp
             )
 
             // 位置信息
             if (!issue.location.isNullOrEmpty()) {
                 Spacer(modifier = Modifier.height(6.dp))
-                Text(
+                AdaptiveText(
                     text = issue.location,
                     fontSize = 12.sp,
-                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary
+                    color = adaptiveOnSurfaceVariantSummary()
                 )
             }
 
-            // 代码片段
             if (!issue.codeSnippet.isNullOrEmpty()) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Card(
@@ -1112,10 +996,10 @@ private fun IssueItem(issue: ComplianceIssue) {
                     cornerRadius = 4.dp
                 ) {
                     SelectionContainer {
-                        Text(
+                        AdaptiveText(
                             text = issue.codeSnippet,
                             fontSize = 12.sp,
-                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                            color = adaptiveOnSurfaceVariantSummary(),
                             modifier = Modifier.padding(8.dp)
                         )
                     }
@@ -1128,9 +1012,8 @@ private fun IssueItem(issue: ComplianceIssue) {
 @Composable
 private fun SuggestionsList(suggestions: List<String>) {
     Column {
-        Text(
+        AdaptiveText(
             text = "改进建议 (${suggestions.size})",
-            style = MiuixTheme.textStyles.body2,
             fontWeight = FontWeight.Bold
         )
         Spacer(modifier = Modifier.height(8.dp))
@@ -1141,17 +1024,15 @@ private fun SuggestionsList(suggestions: List<String>) {
                     .fillMaxWidth()
                     .padding(vertical = 4.dp)
             ) {
-                Text(
+                AdaptiveText(
                     text = "${index + 1}.",
-                    style = MiuixTheme.textStyles.body2,
                     fontWeight = FontWeight.Medium,
-                    color = MiuixTheme.colorScheme.primary
+                    color = adaptivePrimaryColor()
                 )
                 Spacer(modifier = Modifier.width(6.dp))
-                Text(
+                AdaptiveText(
                     text = suggestion,
-                    style = MiuixTheme.textStyles.body2,
-                    lineHeight = 18.sp
+                    fontSize = 14.sp
                 )
             }
         }
@@ -1163,13 +1044,12 @@ fun TagChip(tag: String) {
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(12.dp))
-            .background(MiuixTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f))
+            .background(adaptiveSecondaryContainer().copy(alpha = 0.5f))
             .padding(horizontal = 12.dp, vertical = 6.dp)
     ) {
-        Text(
+        AdaptiveText(
             text = tag,
-            style = MiuixTheme.textStyles.body2,
-            color = MiuixTheme.colorScheme.onSecondaryContainer
+            color = adaptiveOnSecondaryContainer()
         )
     }
 }
