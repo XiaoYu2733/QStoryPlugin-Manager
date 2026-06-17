@@ -79,8 +79,8 @@ fun AboutPage() {
 
     LaunchedEffect(Unit) {
         withContext(Dispatchers.IO) {
-            developers = listOf("XiaoYu2733", "HChenX").mapNotNull { fetchGitHubUser(it) }
-            thanksUsers = listOf("HdShare", "suzhelan").mapNotNull { fetchGitHubUser(it) }
+            developers = listOf("XiaoYu2733", "suzhelan").mapNotNull { fetchGitHubUser(it) }
+            thanksUsers = listOf("HdShare", "HChenX").mapNotNull { fetchGitHubUser(it) }
         }
     }
 
