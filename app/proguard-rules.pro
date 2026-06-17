@@ -1,82 +1,90 @@
-# R8 optimization rules for QStory Plugin Manager
-# Base: proguard-android-optimize.txt
+# Add project specific ProGuard rules here.
+# You can control the set of applied configuration files using the
+# proguardFiles setting in build.gradle.
+#
+# For more details, see
+#   http://developer.android.com/guide/developing/tools/proguard.html
 
-# Remove logging in release builds
--assumenosideeffects class android.util.Log {
-    public static boolean isLoggable(java.lang.String, int);
-    public static int v(...);
-    public static int d(...);
-    public static int i(...);
-}
+# If your project uses WebView with JS, uncomment the following
+# and specify the fully qualified class name to the JavaScript interface
+# class:
+#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
+#   public *;
+#}
 
-# Keep line numbers for crash reports
+# Uncomment this to preserve the line number information for
+# debugging stack traces.
 -keepattributes SourceFile,LineNumberTable
-# If stack traces look wrong with the above, comment it out and uncomment:
-# -renamesourcefileattribute SourceFile
-# Required for Gson and serialization
+
+# If you keep the line number information, uncomment this to
+# hide the original source file name.
+#-renamesourcefileattribute SourceFile
+
+# Keep generic signatures - CRITICAL for Gson
 -keepattributes Signature
 -keepattributes *Annotation*
 -keepattributes EnclosingMethod
 -keepattributes InnerClasses
 
-# === Gson ===
-# Only keep what Gson reflection actually touches
--keep class com.google.gson.stream.** { *; }
+# Gson rules - Keep all data classes and their generic signatures
+-keep class com.google.gson.** { *; }
 -keep class com.google.gson.reflect.TypeToken { *; }
--keepclassmembers class com.google.gson.internal.LinkedTreeMap {
-    java.util.Set entrySet();
-}
-# Keep data classes used with Gson
+-keep class com.google.gson.internal.reflect.** { *; }
+
+# Keep all model classes - CRITICAL for Gson
 -keep class hai.qstory.plugin.manager.data.** { *; }
 
-# === Retrofit ===
--keepattributes RuntimeVisibleAnnotations, RuntimeVisibleParameterAnnotations
--keepclassmembers,allowshrinking,allowobfuscation interface * {
+# Specifically keep QSResult with its generic signature
+-keep class hai.qstory.plugin.manager.data.QSResult { *; }
+
+# Keep all OnlinePluginInfo related classes
+-keep class hai.qstory.plugin.manager.data.OnlinePluginInfo { *; }
+-keep class hai.qstory.plugin.manager.data.OnlinePluginInfo$PluginInfo { *; }
+
+# Retrofit rules
+-dontwarn retrofit2.**
+-keep class retrofit2.** { *; }
+-keepclasseswithmembers class * {
     @retrofit2.http.* <methods>;
 }
--dontwarn retrofit2.**
+
+# OkHttp rules
 -dontwarn okhttp3.**
+-keep class okhttp3.** { *; }
 -dontwarn okio.**
--dontwarn javax.annotation.**
--dontwarn org.codehaus.mojo.animal_sniffer.**
+-keep class okio.** { *; }
 
-# === Kotlin ===
-# R8 handles Kotlin well — only keep what reflection needs
+# Keep Kotlin metadata
+-keep class kotlin.** { *; }
 -keep class kotlin.Metadata { *; }
--keep class kotlin.coroutines.Continuation
--keepclassmembers class * {
-    ** serialize(..);
-    ** deserialize(..);
-}
 
-# === Kotlin Serialization ===
--keepclassmembers class hai.qstory.plugin.manager.** {
-    *** Companion;
-}
--keep class hai.qstory.plugin.manager.**$$serializer { *; }
--dontwarn kotlinx.serialization.**
-
-# === Compose ===
-# R8 natively handles Compose — no blanket keep needed.
-# Only keep Compose runtime classes accessed via reflection
--keep class androidx.compose.runtime.** { *; }
--dontwarn androidx.compose.**
-
-# === Navigation3 ===
--keep class hai.qstory.plugin.manager.Route { *; }
--keep class hai.qstory.plugin.manager.Route$** { *; }
-
-# === Enums ===
+# Keep all enum classes
 -keepclassmembers enum * {
     public static **[] values();
     public static ** valueOf(java.lang.String);
 }
 
-# === MaterialKolor ===
--dontwarn com.materialkolor.**
+# Kotlin Serialization
+-keepattributes *Annotation*
+-keepclassmembers class hai.qstory.plugin.manager.** {
+    public <init>(...);
+}
 
-# === Coil ===
--dontwarn coil.**
+# Kotlinx Serialization
+-keep class kotlinx.serialization.internal.** { *; }
+-keep class kotlinx.serialization.** { *; }
+-dontwarn kotlinx.serialization.**
 
-# === Miuix ===
--dontwarn top.yukonga.miuix.**
+# Navigation3
+-keep class androidx.navigation3.** { *; }
+-keep class hai.qstory.plugin.manager.Route { *; }
+-keep class hai.qstory.plugin.manager.Route$** { *; }
+
+# Compose
+-keep class androidx.compose.** { *; }
+-keep class kotlin.Metadata { *; }
+
+# Keep data classes
+-keepclassmembers class hai.qstory.plugin.manager.data.** {
+    public <init>(...);
+}
