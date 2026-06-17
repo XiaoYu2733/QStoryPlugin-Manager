@@ -3,9 +3,9 @@ package hai.qstory.plugin.manager
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -29,42 +29,54 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import hai.qstory.plugin.manager.ui.component.AdaptiveCard
+import hai.qstory.plugin.manager.ui.component.AdaptiveSmallTitle
+import hai.qstory.plugin.manager.ui.component.AdaptiveText
+import hai.qstory.plugin.manager.ui.component.adaptiveOnSurfaceVariantSummary
+import hai.qstory.plugin.manager.ui.theme.LocalUiMode
+import hai.qstory.plugin.manager.ui.theme.UiMode
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.SmallTitle
-import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.basic.HorizontalDivider
+import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.utils.PressFeedbackType
 import java.net.URL
 
-data class GitHubUser(
+private data class Contributor(
     val login: String,
     val name: String,
     val avatarUrl: String,
     val htmlUrl: String
 )
 
-private fun fetchGitHubUser(username: String): GitHubUser? {
+private data class LibraryInfo(
+    val name: String,
+    val author: String,
+    val license: String,
+    val url: String
+)
+
+private fun fetchGitHubUser(username: String): Contributor {
     return try {
         val json = URL("https://api.github.com/users/$username").readText()
         val obj = JSONObject(json)
-        GitHubUser(
+        Contributor(
             login = obj.optString("login", username),
-            name = obj.optString("name", ""),
+            name = obj.optString("name", "").ifEmpty { username },
             avatarUrl = obj.optString("avatar_url", ""),
             htmlUrl = obj.optString("html_url", "https://github.com/$username")
         )
     } catch (_: Exception) {
-        GitHubUser(
+        Contributor(
             login = username,
-            name = "",
-            avatarUrl = "https://avatars.githubusercontent.com/$username",
+            name = username,
+            avatarUrl = "",
             htmlUrl = "https://github.com/$username"
         )
     }
@@ -73,9 +85,11 @@ private fun fetchGitHubUser(username: String): GitHubUser? {
 @Composable
 fun AboutPage() {
     val context = LocalContext.current
+    val uiMode = LocalUiMode.current
     val githubUrl = "https://github.com/XiaoYu2733/QStoryPlugin-Manager"
-    var developers by remember { mutableStateOf<List<GitHubUser>>(emptyList()) }
-    var thanksUsers by remember { mutableStateOf<List<GitHubUser>>(emptyList()) }
+
+    var developers by remember { mutableStateOf<List<Contributor>>(emptyList()) }
+    var thanksUsers by remember { mutableStateOf<List<Contributor>>(emptyList()) }
 
     LaunchedEffect(Unit) {
         withContext(Dispatchers.IO) {
@@ -84,197 +98,325 @@ fun AboutPage() {
         }
     }
 
-    LazyColumn(
-        modifier = Modifier.fillMaxSize()
-    ) {
-        // 查看源码
+    val libraries = remember {
+        listOf(
+            LibraryInfo("MIUIx-KMP", "YuKongA", "Apache-2.0", "https://github.com/YuKongA/MIUIx-KMP"),
+            LibraryInfo("Retrofit", "Square", "Apache-2.0", "https://github.com/square/retrofit"),
+            LibraryInfo("OkHttp", "Square", "Apache-2.0", "https://github.com/square/okhttp"),
+            LibraryInfo("Gson", "Google", "Apache-2.0", "https://github.com/google/gson"),
+            LibraryInfo("Coil", "Coil", "Apache-2.0", "https://github.com/coil-kt/coil"),
+            LibraryInfo("MaterialKolor", "JahirFiquitiva", "Apache-2.0", "https://github.com/jahirfiquitiva/MaterialKolor"),
+            LibraryInfo("Kotlin Serialization", "JetBrains", "Apache-2.0", "https://github.com/Kotlin/kotlinx.serialization"),
+            LibraryInfo("Navigation3", "AndroidX", "Apache-2.0", "https://developer.android.com"),
+            LibraryInfo("Jetpack Compose", "Google", "Apache-2.0", "https://developer.android.com/compose"),
+            LibraryInfo("Kotlin", "JetBrains", "Apache-2.0", "https://github.com/JetBrains/kotlin"),
+        )
+    }
+
+    LazyColumn(modifier = Modifier.fillMaxSize()) {
+        // ── 头部 ──
         item {
-            Card(
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 12.dp)
-                    .padding(top = 12.dp, bottom = 12.dp),
-                insideMargin = PaddingValues(16.dp),
-                pressFeedbackType = PressFeedbackType.Sink,
-                showIndication = true,
-                onClick = {
-                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(githubUrl))
-                    context.startActivity(intent)
-                }
+                    .padding(top = 32.dp, bottom = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_github),
-                        contentDescription = "GitHub",
-                        tint = MiuixTheme.colorScheme.onBackground,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "查看源码",
-                        style = MiuixTheme.textStyles.body1
+                when (uiMode) {
+                    UiMode.Material -> {
+                        Image(
+                            painter = painterResource(R.mipmap.ic_launcher_round),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .size(80.dp)
+                                .clip(RoundedCornerShape(18.dp)),
+                            contentScale = ContentScale.Crop,
+                        )
+                    }
+                    UiMode.Miuix -> {
+                        Image(
+                            painter = painterResource(R.mipmap.ic_launcher_round),
+                            contentDescription = null,
+                            modifier = Modifier
+                                .size(80.dp)
+                                .clip(RoundedCornerShape(18.dp)),
+                            contentScale = ContentScale.Crop,
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                AdaptiveText(
+                    text = "QStory Plugin Manager",
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold,
+                )
+
+                Spacer(modifier = Modifier.height(4.dp))
+
+                AdaptiveText(
+                    text = "v${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
+                    color = adaptiveOnSurfaceVariantSummary(),
+                    fontSize = 14.sp,
+                )
+            }
+        }
+
+        // ── 项目简介 ──
+        item { AdaptiveSmallTitle(text = "关于项目") }
+
+        item {
+            AdaptiveCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp)) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    AdaptiveText(
+                        text = "QStory 脚本管理器，用于浏览、下载和管理 QStory 在线脚本。\n\n" +
+                                "使用脚本请自行辨别脚本是否包含危险功能，对所加载的脚本负责。\n\n" +
+                                "本项目 100% 开源，仅供学习交流使用。脚本内容版权归原作者所有。",
+                        fontSize = 15.sp,
                     )
                 }
             }
         }
 
-        // Telegram 群组
-        item {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 12.dp)
-                    .padding(bottom = 12.dp),
-                insideMargin = PaddingValues(16.dp),
-                pressFeedbackType = PressFeedbackType.Sink,
-                showIndication = true,
-                onClick = {
-                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/XiaoYu_Chat"))
-                    context.startActivity(intent)
-                }
-            ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_telegram),
-                        contentDescription = "Telegram",
-                        tint = MiuixTheme.colorScheme.onBackground,
-                        modifier = Modifier.size(24.dp)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(
-                        text = "Telegram 群组",
-                        style = MiuixTheme.textStyles.body1
-                    )
-                }
-            }
-        }
-
-        // 开发者
+        // ── 开发者 ──
         if (developers.isNotEmpty()) {
+            item { AdaptiveSmallTitle(text = "开发者") }
+
             item {
-                SmallTitle(text = "开发者")
-            }
-            item {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp)
-                        .padding(bottom = 12.dp),
-                    insideMargin = PaddingValues(16.dp),
+                AdaptiveCard(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
+                    onClick = {}
                 ) {
-                    Column {
+                    Column(modifier = Modifier.padding(4.dp)) {
                         developers.forEach { dev ->
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable {
-                                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(dev.htmlUrl))
-                                        context.startActivity(intent)
-                                    }
-                                    .padding(vertical = 6.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                AsyncImage(
-                                    model = ImageRequest.Builder(LocalContext.current)
-                                        .data(dev.avatarUrl)
-                                        .crossfade(true)
-                                        .build(),
-                                    contentDescription = "GitHub 头像",
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier
-                                        .size(40.dp)
-                                        .clip(RoundedCornerShape(20.dp))
-                                )
-                                Spacer(modifier = Modifier.width(12.dp))
-                                Column {
-                                    Text(
-                                        text = dev.login,
-                                        style = MiuixTheme.textStyles.body2,
-                                        fontWeight = FontWeight.Medium
-                                    )
-                                    if (dev.name.isNotEmpty() && dev.name != dev.login) {
-                                        Text(
-                                            text = dev.name,
-                                            style = MiuixTheme.textStyles.body2,
-                                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary
-                                        )
-                                    }
-                                }
-                            }
+                            ContributorRow(dev, context)
                         }
                     }
                 }
             }
         }
 
-        // 特别鸣谢
+        // ── 特别鸣谢 ──
         if (thanksUsers.isNotEmpty()) {
+            item { AdaptiveSmallTitle(text = "特别鸣谢") }
+
             item {
-                SmallTitle(text = "特别鸣谢")
-            }
-            item {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 12.dp)
-                        .padding(bottom = 12.dp),
-                    insideMargin = PaddingValues(16.dp),
+                AdaptiveCard(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
+                    onClick = {}
                 ) {
-                    Column {
-                        thanksUsers.forEach { u ->
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .clickable {
-                                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(u.htmlUrl))
-                                        context.startActivity(intent)
-                                    }
-                                    .padding(vertical = 6.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                AsyncImage(
-                                    model = ImageRequest.Builder(LocalContext.current)
-                                        .data(u.avatarUrl)
-                                        .crossfade(true)
-                                        .build(),
-                                    contentDescription = "GitHub 头像",
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier
-                                        .size(40.dp)
-                                        .clip(RoundedCornerShape(20.dp))
-                                )
-                                Spacer(modifier = Modifier.width(12.dp))
-                                Column {
-                                    Text(
-                                        text = u.login,
-                                        style = MiuixTheme.textStyles.body2,
-                                        fontWeight = FontWeight.Medium
-                                    )
-                                    if (u.name.isNotEmpty() && u.name != u.login) {
-                                        Text(
-                                            text = u.name,
-                                            style = MiuixTheme.textStyles.body2,
-                                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary
-                                        )
-                                    }
-                                }
-                            }
+                    Column(modifier = Modifier.padding(4.dp)) {
+                        thanksUsers.forEach { user ->
+                            ContributorRow(user, context)
                         }
                     }
                 }
             }
         }
+
+        // ── 反馈交流 ──
+        item { AdaptiveSmallTitle(text = "反馈交流") }
 
         item {
-            Spacer(modifier = Modifier.height(80.dp))
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                AdaptiveCard(
+                    onClick = {
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(githubUrl))
+                        context.startActivity(intent)
+                    }
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        when (uiMode) {
+                            UiMode.Material -> {
+                                androidx.compose.material3.Icon(
+                                    painter = painterResource(R.drawable.ic_github),
+                                    contentDescription = "GitHub",
+                                    tint = androidx.compose.material3.MaterialTheme.colorScheme.onSurface,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                            UiMode.Miuix -> {
+                                MiuixIcon(
+                                    painter = painterResource(R.drawable.ic_github),
+                                    contentDescription = "GitHub",
+                                    tint = MiuixTheme.colorScheme.onBackground,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            AdaptiveText(text = "GitHub 仓库", fontWeight = FontWeight.Medium)
+                            AdaptiveText(
+                                text = githubUrl,
+                                color = adaptiveOnSurfaceVariantSummary(),
+                                fontSize = 13.sp,
+                            )
+                        }
+                    }
+                }
+
+                AdaptiveCard(
+                    onClick = {
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/XiaoYu_Chat"))
+                        context.startActivity(intent)
+                    }
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        when (uiMode) {
+                            UiMode.Material -> {
+                                androidx.compose.material3.Icon(
+                                    painter = painterResource(R.drawable.ic_telegram),
+                                    contentDescription = "Telegram",
+                                    tint = androidx.compose.material3.MaterialTheme.colorScheme.onSurface,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                            UiMode.Miuix -> {
+                                MiuixIcon(
+                                    painter = painterResource(R.drawable.ic_telegram),
+                                    contentDescription = "Telegram",
+                                    tint = MiuixTheme.colorScheme.onBackground,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            AdaptiveText(text = "Telegram 群组", fontWeight = FontWeight.Medium)
+                            AdaptiveText(
+                                text = "https://t.me/XiaoYu_Chat",
+                                color = adaptiveOnSurfaceVariantSummary(),
+                                fontSize = 13.sp,
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        // ── 开源许可 ──
+        item { AdaptiveSmallTitle(text = "开源许可") }
+
+        item {
+            AdaptiveCard(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
+                onClick = {}
+            ) {
+                Column(modifier = Modifier.padding(4.dp)) {
+                    libraries.forEachIndexed { index, lib ->
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 10.dp)
+                        ) {
+                            AdaptiveText(
+                                text = lib.name,
+                                fontWeight = FontWeight.Medium,
+                                fontSize = 15.sp,
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            AdaptiveText(
+                                text = "${lib.author}  •  ${lib.license}",
+                                color = adaptiveOnSurfaceVariantSummary(),
+                                fontSize = 13.sp,
+                            )
+                        }
+                        if (index < libraries.lastIndex) {
+                            when (uiMode) {
+                                UiMode.Miuix -> {
+                                    top.yukonga.miuix.kmp.basic.HorizontalDivider()
+                                }
+                                UiMode.Material -> {
+                                    androidx.compose.material3.HorizontalDivider(
+                                        modifier = Modifier.padding(horizontal = 16.dp),
+                                        color = androidx.compose.material3.MaterialTheme.colorScheme.outlineVariant,
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        item { Spacer(modifier = Modifier.height(80.dp)) }
+    }
+}
+
+@Composable
+private fun ContributorRow(contributor: Contributor, context: android.content.Context) {
+    val uiMode = LocalUiMode.current
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(contributor.htmlUrl))
+                context.startActivity(intent)
+            }
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        if (contributor.avatarUrl.isNotEmpty()) {
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(contributor.avatarUrl)
+                    .crossfade(true)
+                    .build(),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .size(36.dp)
+                    .clip(RoundedCornerShape(18.dp))
+            )
+        } else {
+            // Fallback avatar placeholder
+            when (uiMode) {
+                UiMode.Material -> {
+                    androidx.compose.material3.Icon(
+                        painter = painterResource(R.drawable.ic_github),
+                        contentDescription = null,
+                        modifier = Modifier.size(36.dp),
+                        tint = androidx.compose.material3.MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                UiMode.Miuix -> {
+                    MiuixIcon(
+                        painter = painterResource(R.drawable.ic_github),
+                        contentDescription = null,
+                        tint = MiuixTheme.colorScheme.onBackground,
+                        modifier = Modifier.size(36.dp)
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.width(12.dp))
+
+        Column {
+            AdaptiveText(
+                text = contributor.login,
+                fontWeight = FontWeight.Medium,
+                fontSize = 15.sp,
+            )
+            if (contributor.name.isNotEmpty() && contributor.name != contributor.login) {
+                AdaptiveText(
+                    text = contributor.name,
+                    color = adaptiveOnSurfaceVariantSummary(),
+                    fontSize = 13.sp,
+                )
+            }
         }
     }
 }
