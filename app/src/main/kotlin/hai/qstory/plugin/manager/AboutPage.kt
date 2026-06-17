@@ -167,7 +167,7 @@ fun AboutPage() {
         item { AdaptiveSmallTitle(text = "关于项目") }
 
         item {
-            AdaptiveCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp)) {
+            AdaptiveCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp).padding(bottom = 12.dp)) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     AdaptiveText(
                         text = "QStory 脚本管理器，用于浏览、下载和管理 QStory 在线脚本。\n\n" +
@@ -185,7 +185,7 @@ fun AboutPage() {
 
             item {
                 AdaptiveCard(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp).padding(bottom = 12.dp),
                     onClick = {}
                 ) {
                     Column(modifier = Modifier.padding(4.dp)) {
@@ -203,7 +203,7 @@ fun AboutPage() {
 
             item {
                 AdaptiveCard(
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp).padding(bottom = 12.dp),
                     onClick = {}
                 ) {
                     Column(modifier = Modifier.padding(4.dp)) {
@@ -224,6 +224,7 @@ fun AboutPage() {
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 AdaptiveCard(
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
                     onClick = {
                         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(githubUrl))
                         context.startActivity(intent)
@@ -264,6 +265,7 @@ fun AboutPage() {
                 }
 
                 AdaptiveCard(
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
                     onClick = {
                         val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://t.me/XiaoYu_Chat"))
                         context.startActivity(intent)
