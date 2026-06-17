@@ -43,7 +43,6 @@ import hai.qstory.plugin.manager.ui.theme.UiMode
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
-import top.yukonga.miuix.kmp.basic.HorizontalDivider
 import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import java.net.URL
@@ -55,12 +54,6 @@ private data class Contributor(
     val htmlUrl: String
 )
 
-private data class LibraryInfo(
-    val name: String,
-    val author: String,
-    val license: String,
-    val url: String
-)
 
 private fun fetchGitHubUser(username: String): Contributor {
     return try {
@@ -96,21 +89,6 @@ fun AboutPage() {
             developers = listOf("XiaoYu2733", "suzhelan").mapNotNull { fetchGitHubUser(it) }
             thanksUsers = listOf("HdShare", "HChenX").mapNotNull { fetchGitHubUser(it) }
         }
-    }
-
-    val libraries = remember {
-        listOf(
-            LibraryInfo("MIUIx-KMP", "YuKongA", "Apache-2.0", "https://github.com/YuKongA/MIUIx-KMP"),
-            LibraryInfo("Retrofit", "Square", "Apache-2.0", "https://github.com/square/retrofit"),
-            LibraryInfo("OkHttp", "Square", "Apache-2.0", "https://github.com/square/okhttp"),
-            LibraryInfo("Gson", "Google", "Apache-2.0", "https://github.com/google/gson"),
-            LibraryInfo("Coil", "Coil", "Apache-2.0", "https://github.com/coil-kt/coil"),
-            LibraryInfo("MaterialKolor", "JahirFiquitiva", "Apache-2.0", "https://github.com/jahirfiquitiva/MaterialKolor"),
-            LibraryInfo("Kotlin Serialization", "JetBrains", "Apache-2.0", "https://github.com/Kotlin/kotlinx.serialization"),
-            LibraryInfo("Navigation3", "AndroidX", "Apache-2.0", "https://developer.android.com"),
-            LibraryInfo("Jetpack Compose", "Google", "Apache-2.0", "https://developer.android.com/compose"),
-            LibraryInfo("Kotlin", "JetBrains", "Apache-2.0", "https://github.com/JetBrains/kotlin"),
-        )
     }
 
     LazyColumn(modifier = Modifier.fillMaxSize()) {
@@ -301,51 +279,6 @@ fun AboutPage() {
                                 color = adaptiveOnSurfaceVariantSummary(),
                                 fontSize = 13.sp,
                             )
-                        }
-                    }
-                }
-            }
-        }
-
-        // ── 开源许可 ──
-        item { AdaptiveSmallTitle(text = "开源许可") }
-
-        item {
-            AdaptiveCard(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
-                onClick = {}
-            ) {
-                Column(modifier = Modifier.padding(4.dp)) {
-                    libraries.forEachIndexed { index, lib ->
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 16.dp, vertical = 10.dp)
-                        ) {
-                            AdaptiveText(
-                                text = lib.name,
-                                fontWeight = FontWeight.Medium,
-                                fontSize = 15.sp,
-                            )
-                            Spacer(modifier = Modifier.height(2.dp))
-                            AdaptiveText(
-                                text = "${lib.author}  •  ${lib.license}",
-                                color = adaptiveOnSurfaceVariantSummary(),
-                                fontSize = 13.sp,
-                            )
-                        }
-                        if (index < libraries.lastIndex) {
-                            when (uiMode) {
-                                UiMode.Miuix -> {
-                                    top.yukonga.miuix.kmp.basic.HorizontalDivider()
-                                }
-                                UiMode.Material -> {
-                                    androidx.compose.material3.HorizontalDivider(
-                                        modifier = Modifier.padding(horizontal = 16.dp),
-                                        color = androidx.compose.material3.MaterialTheme.colorScheme.outlineVariant,
-                                    )
-                                }
-                            }
                         }
                     }
                 }
