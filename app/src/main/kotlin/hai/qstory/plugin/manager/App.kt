@@ -1,5 +1,13 @@
 package hai.qstory.plugin.manager
 
+import android.app.Activity
+import android.widget.Toast
+import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
@@ -18,7 +26,9 @@ import androidx.compose.material.icons.rounded.Extension
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -28,6 +38,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -66,6 +77,19 @@ private fun String.toNavRoute(): Route = when {
 }
 
 private fun String.toNavKey(): NavKey = toNavRoute()
+
+private fun routeForward(from: String, to: String): Boolean {
+    val fromDepth = when (from.toNavRoute()) {
+        is Route.Main -> 0
+        else -> 1
+    }
+    val toDepth = when (to.toNavRoute()) {
+        is Route.Main -> 0
+        else -> 1
+    }
+    return toDepth > fromDepth
+}
+
 @Composable
 fun App(
     appSettings: AppSettings,
@@ -107,6 +131,55 @@ fun App(
         }
 
         val pagerState = rememberPagerState(pageCount = { 4 })
+        val context = LocalContext.current
+        var lastBackPressTime by remember { mutableLongStateOf(0L) }
+
+        var previousRouteStr by remember { mutableStateOf(currentRouteStr) }
+        LaunchedEffect(currentRouteStr) {
+            if (previousRouteStr.startsWith("plugin_detail:") && currentRouteStr == "main") {
+                if (pagerState.currentPage != 0) {
+                    pagerState.animateScrollToPage(0)
+                }
+            } else if (currentRouteStr != "main" && !currentRouteStr.startsWith("plugin_detail:")) {
+                lastBackPressTime = 0L
+            }
+            previousRouteStr = currentRouteStr
+        }
+
+        val performOptimizedBack: () -> Unit = {
+            val atMainHome = navigator.current() is Route.Main && pagerState.currentPage == 0
+            val now = System.currentTimeMillis()
+
+            if (!atMainHome) {
+                when (navigator.current()) {
+                    is Route.PluginDetail -> navigator.pop()
+                    is Route.Main -> {
+                        coroutineScope.launch {
+                            pagerState.animateScrollToPage(0)
+                        }
+                    }
+                    else -> Unit
+                }
+                lastBackPressTime = now
+            } else if (now - lastBackPressTime < 2_000L) {
+                (context as? Activity)?.moveTaskToBack(true)
+                lastBackPressTime = 0L
+            } else {
+                lastBackPressTime = now
+                Toast.makeText(context, "再按一次退出应用", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        BackHandler(
+            enabled = navigator.current() is Route.PluginDetail
+                || navigator.current() is Route.Main,
+        ) {
+            performOptimizedBack()
+        }
+
+        BackHandler(enabled = navigator.current() is Route.ColorPalette) {
+            navigator.pop()
+        }
 
         val navigationItems = remember {
             listOf(
@@ -220,38 +293,53 @@ fun App(
                     }
                 }
             ) { innerPadding ->
-                when (val route = navigator.current()) {
-                    is Route.Main -> {
-                        val bottomPadding = if (enableFloatingBottomBar) 0.dp
-                            else innerPadding.calculateBottomPadding()
-                        HorizontalPager(
-                            state = pagerState,
-                            modifier = Modifier
-                                .padding(top = innerPadding.calculateTopPadding(), bottom = bottomPadding)
-                                .then(if (enableFloatingBottomBar && enableFloatingBottomBarBlur) Modifier.layerBackdrop(backdrop) else Modifier),
-                        ) { page ->
-                            when (page) {
-                                0 -> HomePage(
-                                    navigator = navigator
-                                )
-                                1 -> StatisticsPage()
-                                2 -> AboutPage()
-                                3 -> SettingsPage(
-                                    navigator = navigator,
-                                )
+                AnimatedContent(
+                    targetState = currentRouteStr,
+                    transitionSpec = {
+                        if (routeForward(initialState, targetState)) {
+                            slideInHorizontally(tween(300)) { fullWidth -> fullWidth } togetherWith
+                                slideOutHorizontally(tween(300)) { fullWidth -> -fullWidth / 3 }
+                        } else {
+                            slideInHorizontally(tween(300)) { fullWidth -> -fullWidth / 3 } togetherWith
+                                slideOutHorizontally(tween(300)) { fullWidth -> fullWidth }
+                        }
+                    },
+                    label = "app_route",
+                    modifier = Modifier.fillMaxSize(),
+                ) { routeStr ->
+                    when (val route = routeStr.toNavRoute()) {
+                        is Route.Main -> {
+                            val bottomPadding = if (enableFloatingBottomBar) 0.dp
+                                else innerPadding.calculateBottomPadding()
+                            HorizontalPager(
+                                state = pagerState,
+                                modifier = Modifier
+                                    .padding(top = innerPadding.calculateTopPadding(), bottom = bottomPadding)
+                                    .then(if (enableFloatingBottomBar && enableFloatingBottomBarBlur) Modifier.layerBackdrop(backdrop) else Modifier),
+                            ) { page ->
+                                when (page) {
+                                    0 -> HomePage(
+                                        navigator = navigator
+                                    )
+                                    1 -> StatisticsPage()
+                                    2 -> AboutPage()
+                                    3 -> SettingsPage(
+                                        navigator = navigator,
+                                    )
+                                }
                             }
                         }
-                    }
-                    is Route.PluginDetail -> {
-                        PluginDetailPage(
-                            cloudId = (route as Route.PluginDetail).cloudId,
-                            navigator = navigator
-                        )
-                    }
-                    is Route.ColorPalette -> {
-                        ColorPaletteScreen(
-                            onBack = { navigator.pop() }
-                        )
+                        is Route.PluginDetail -> {
+                            PluginDetailPage(
+                                cloudId = route.cloudId,
+                                onBack = performOptimizedBack,
+                            )
+                        }
+                        is Route.ColorPalette -> {
+                            ColorPaletteScreen(
+                                onBack = { navigator.pop() }
+                            )
+                        }
                     }
                 }
             }

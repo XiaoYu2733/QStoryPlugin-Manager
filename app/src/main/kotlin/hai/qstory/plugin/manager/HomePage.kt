@@ -296,7 +296,7 @@ fun PluginCard(
 @Composable
 fun PluginDetailPage(
     cloudId: String,
-    navigator: AppNavigator
+    onBack: () -> Unit,
 ) {
     val context = LocalContext.current
     val downloadManager = remember { PluginDownloadManager(context) }
@@ -586,7 +586,7 @@ fun PluginDetailPage(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                 IconButton(
-                    onClick = { navigator.pop() },
+                    onClick = onBack,
                     modifier = Modifier.size(44.dp)
                 ) {
                     Icon(

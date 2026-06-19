@@ -29,7 +29,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
@@ -53,7 +52,6 @@ private data class Contributor(
     val avatarUrl: String,
     val htmlUrl: String
 )
-
 
 private fun fetchGitHubUser(username: String): Contributor {
     return try {
@@ -83,11 +81,13 @@ fun AboutPage() {
 
     var developers by remember { mutableStateOf<List<Contributor>>(emptyList()) }
     var thanksUsers by remember { mutableStateOf<List<Contributor>>(emptyList()) }
+    var genshinExpert by remember { mutableStateOf<Contributor?>(null) }
 
     LaunchedEffect(Unit) {
         withContext(Dispatchers.IO) {
             developers = listOf("XiaoYu2733", "suzhelan").mapNotNull { fetchGitHubUser(it) }
             thanksUsers = listOf("HdShare", "HChenX").mapNotNull { fetchGitHubUser(it) }
+            genshinExpert = fetchGitHubUser("DJWSJ").copy(name = "原神高手")
         }
     }
 
@@ -189,6 +189,23 @@ fun AboutPage() {
                             ContributorRow(user, context)
                         }
                     }
+                }
+            }
+        }
+
+        // ── 原神高手 ──
+        if (genshinExpert != null) {
+            item { AdaptiveSmallTitle(text = "原神高手") }
+
+            item {
+                AdaptiveCard(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp)
+                        .padding(bottom = 12.dp),
+                    onClick = {}
+                ) {
+                    ContributorRow(genshinExpert!!, context)
                 }
             }
         }

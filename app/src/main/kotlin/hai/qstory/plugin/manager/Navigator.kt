@@ -9,6 +9,7 @@ import androidx.navigation3.runtime.NavKey
 interface AppNavigator {
     val backStack: SnapshotStateList<NavKey>
     fun push(route: NavKey)
+    /** Returns to the previous screen in the navigation stack. */
     fun pop()
     fun current(): NavKey
 }
