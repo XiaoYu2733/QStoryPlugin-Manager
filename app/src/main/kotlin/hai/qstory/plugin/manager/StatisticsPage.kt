@@ -3,65 +3,42 @@ package hai.qstory.plugin.manager
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import hai.qstory.plugin.manager.data.PlatformStatistics
-import hai.qstory.plugin.manager.network.RetrofitClient
+import hai.qstory.plugin.manager.repository.PluginRepository
 import hai.qstory.plugin.manager.ui.component.AdaptiveCard
 import hai.qstory.plugin.manager.ui.component.AdaptiveInfiniteProgressIndicator
 import hai.qstory.plugin.manager.ui.component.AdaptiveSmallTitle
 import hai.qstory.plugin.manager.ui.component.AdaptiveText
 import hai.qstory.plugin.manager.ui.component.adaptiveOnSurfaceVariantSummary
 import hai.qstory.plugin.manager.ui.component.adaptivePrimaryColor
-import hai.qstory.plugin.manager.ui.theme.LocalUiMode
-import hai.qstory.plugin.manager.ui.theme.UiMode
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import top.yukonga.miuix.kmp.basic.LinearProgressIndicator
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
 fun StatisticsPage() {
-    var stats by remember { mutableStateOf<PlatformStatistics?>(null) }
-    var isLoading by remember { mutableStateOf(true) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
+    val statisticsState by PluginRepository.statistics.collectAsState()
 
     LaunchedEffect(Unit) {
-        withContext(Dispatchers.IO) {
-            try {
-                val response = RetrofitClient.pluginService.getPlatformStatistics()
-                if (response.isSuccess()) {
-                    stats = response.data
-                } else {
-                    errorMessage = response.message
-                }
-            } catch (e: Exception) {
-                errorMessage = e.message
-            } finally {
-                isLoading = false
-            }
-        }
+        PluginRepository.ensureStatisticsLoaded()
     }
+
+    val stats = statisticsState.data
+    val isLoading = statisticsState.isLoading && stats == null
+    val errorMessage = statisticsState.error
 
     LazyColumn(
         modifier = Modifier.fillMaxSize()

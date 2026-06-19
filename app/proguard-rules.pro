@@ -19,6 +19,10 @@
 -keep class com.google.gson.internal.$Gson$Types$GenericArrayTypeImpl { *; }
 -keep class com.google.gson.internal.$Gson$Types$ParameterizedTypeImpl { *; }
 -keep class com.google.gson.internal.$Gson$Types$WildcardTypeImpl { *; }
+-keep class * extends com.google.gson.reflect.TypeToken
+-keepclassmembers class * extends com.google.gson.reflect.TypeToken {
+    <init>();
+}
 
 # === Model classes (must keep all for Gson reflection) ===
 -keep class hai.qstory.plugin.manager.data.** { *; }

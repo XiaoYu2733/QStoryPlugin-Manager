@@ -4,6 +4,8 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.widget.Toast
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,16 +18,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -35,58 +37,50 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.window.Dialog
-import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import hai.qstory.plugin.manager.data.AiReviewRecord
 import hai.qstory.plugin.manager.data.ComplianceIssue
-import hai.qstory.plugin.manager.data.ScriptDetail
 import hai.qstory.plugin.manager.data.ScriptListItem
 import hai.qstory.plugin.manager.manager.PluginDownloadManager
-import hai.qstory.plugin.manager.network.RetrofitClient
 import hai.qstory.plugin.manager.preferences.PreferencesManager
+import hai.qstory.plugin.manager.repository.PluginRepository
+import hai.qstory.plugin.manager.ui.component.AdaptiveButton
+import hai.qstory.plugin.manager.ui.component.AdaptiveCard
+import hai.qstory.plugin.manager.ui.component.AdaptiveDropdownField
+import hai.qstory.plugin.manager.ui.component.AdaptiveInfiniteProgressIndicator
+import hai.qstory.plugin.manager.ui.component.AdaptiveText
+import hai.qstory.plugin.manager.ui.component.AdaptiveTextField
+import hai.qstory.plugin.manager.ui.component.adaptiveOnSecondaryContainer
+import hai.qstory.plugin.manager.ui.component.adaptiveOnSurfaceSecondary
+import hai.qstory.plugin.manager.ui.component.adaptiveOnSurfaceVariantSummary
+import hai.qstory.plugin.manager.ui.component.adaptivePrimaryColor
+import hai.qstory.plugin.manager.ui.component.adaptiveSecondaryContainer
+import hai.qstory.plugin.manager.ui.theme.LocalUiMode
+import hai.qstory.plugin.manager.ui.theme.UiMode
 import hai.qstory.plugin.manager.ui.util.BlurredBar
 import hai.qstory.plugin.manager.ui.util.rememberBlurBackdrop
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.HorizontalDivider
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.blur.layerBackdrop
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Back
 import top.yukonga.miuix.kmp.icon.extended.Download
-import hai.qstory.plugin.manager.ui.theme.LocalUiMode
-import hai.qstory.plugin.manager.ui.theme.UiMode
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.material3.MaterialTheme as M3MaterialTheme
 import androidx.compose.material3.Text as M3Text
-import hai.qstory.plugin.manager.ui.component.AdaptiveCard
-import hai.qstory.plugin.manager.ui.component.AdaptiveTextField
-import hai.qstory.plugin.manager.ui.component.AdaptiveButton
-import hai.qstory.plugin.manager.ui.component.AdaptiveInfiniteProgressIndicator
-import hai.qstory.plugin.manager.ui.component.AdaptiveText
-import hai.qstory.plugin.manager.ui.component.AdaptiveDropdownField
-import hai.qstory.plugin.manager.ui.component.adaptiveOnSecondaryContainer
-import hai.qstory.plugin.manager.ui.component.adaptiveOnSurfaceSecondary
-import hai.qstory.plugin.manager.ui.component.adaptiveOnSurfaceVariantSummary
-import hai.qstory.plugin.manager.ui.component.adaptivePrimaryColor
-import hai.qstory.plugin.manager.ui.component.adaptiveSecondaryContainer
-import androidx.compose.material3.CircularProgressIndicator
 
 sealed class DownloadState {
     data object Idle : DownloadState()
@@ -103,44 +97,15 @@ fun HomePage(
 ) {
     val context = LocalContext.current
     val downloadManager = remember { PluginDownloadManager(context) }
-    var pluginList by remember { mutableStateOf<List<ScriptListItem>>(emptyList()) }
-    var isLoading by remember { mutableStateOf(true) }
-    var errorMessage by remember { mutableStateOf<String?>(null) }
+    val scriptListState by PluginRepository.scriptList.collectAsState()
 
     LaunchedEffect(Unit) {
-        withContext(Dispatchers.IO) {
-            try {
-                val firstPage = RetrofitClient.pluginService.getPublicScriptList()
-                if (!firstPage.isSuccess()) {
-                    errorMessage = firstPage.message
-                    return@withContext
-                }
-                val data = firstPage.data ?: return@withContext
-                val allItems = mutableListOf<ScriptListItem>()
-                allItems.addAll(data.list)
-
-                if (data.totalPages > 1) {
-                    coroutineScope {
-                        val deferred = (2..data.totalPages).map { page ->
-                            async {
-                                RetrofitClient.pluginService.getPublicScriptList(page = page)
-                            }
-                        }
-                        deferred.awaitAll().forEach { response ->
-                            if (response.isSuccess()) {
-                                response.data?.list?.let { allItems.addAll(it) }
-                            }
-                        }
-                    }
-                }
-                pluginList = allItems
-            } catch (e: Exception) {
-                errorMessage = e.message
-            } finally {
-                isLoading = false
-            }
-        }
+        PluginRepository.ensureScriptListLoaded()
     }
+
+    val pluginList = scriptListState.data ?: emptyList()
+    val isLoading = scriptListState.isLoading && pluginList.isEmpty()
+    val errorMessage = scriptListState.error
 
     var selectedTag by remember { mutableStateOf("全部") }
     var selectedStatus by remember { mutableStateOf("全部状态") }
@@ -336,16 +301,19 @@ fun PluginDetailPage(
     val context = LocalContext.current
     val downloadManager = remember { PluginDownloadManager(context) }
     val coroutineScope = rememberCoroutineScope()
-    var plugin by remember { mutableStateOf<ScriptDetail?>(null) }
-    var isLoading by remember { mutableStateOf(true) }
+    val detailState by PluginRepository.scriptDetailState(cloudId).collectAsState()
+    val aiReviewState by PluginRepository.aiReviewState(cloudId).collectAsState()
     var downloadState by remember { mutableStateOf<DownloadState>(DownloadState.Idle) }
     var isDownloading by remember { mutableStateOf(false) }
     var downloadedFileName by remember { mutableStateOf<String?>(null) }
     var downloadProgress by remember { mutableStateOf(0) }
-    var aiReview by remember { mutableStateOf<AiReviewRecord?>(null) }
-    var aiReviewLoading by remember { mutableStateOf(true) }
     var showSuccessDialog by remember { mutableStateOf(false) }
     var downloadDirPath by remember { mutableStateOf("") }
+
+    val plugin = detailState.data
+    val isLoading = detailState.isLoading && plugin == null
+    val aiReview = aiReviewState.data
+    val aiReviewLoading = aiReviewState.isLoading && aiReview == null
 
     val listState = rememberLazyListState()
     val showTopBar by remember {
@@ -359,29 +327,8 @@ fun PluginDetailPage(
     val blurActive = backdrop != null
 
     LaunchedEffect(cloudId) {
-        withContext(Dispatchers.IO) {
-            try {
-                val response = RetrofitClient.pluginService.getPublicScriptDetail(cloudId)
-                if (response.isSuccess()) {
-                    plugin = response.data
-                }
-            } finally {
-                isLoading = false
-            }
-        }
-    }
-
-    LaunchedEffect(cloudId) {
-        withContext(Dispatchers.IO) {
-            try {
-                val response = RetrofitClient.pluginService.getPublicScriptAiReview(cloudId)
-                if (response.isSuccess()) {
-                    aiReview = response.data
-                }
-            } finally {
-                aiReviewLoading = false
-            }
-        }
+        PluginRepository.ensureScriptDetailLoaded(cloudId)
+        PluginRepository.ensureAiReviewLoaded(cloudId)
     }
 
     LaunchedEffect(cloudId) {

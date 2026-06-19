@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.Density
 import com.materialkolor.PaletteStyle
 import com.materialkolor.dynamiccolor.ColorSpec
 import hai.qstory.plugin.manager.preferences.PreferencesManager
+import hai.qstory.plugin.manager.repository.PluginRepository
 import hai.qstory.plugin.manager.ui.theme.AppSettings
 import hai.qstory.plugin.manager.ui.theme.ColorMode
 import hai.qstory.plugin.manager.ui.theme.LocalUiMode
@@ -51,6 +52,7 @@ class MainActivity : ComponentActivity() {
         // Must init prefs and disable predictive back before super.onCreate(),
         // because Android 15+ forces it on by default at targetSdk 35+.
         PreferencesManager.init(applicationContext)
+        PluginRepository.init(applicationContext)
         applyPredictiveBackSetting()
         super.onCreate(savedInstanceState)
 
