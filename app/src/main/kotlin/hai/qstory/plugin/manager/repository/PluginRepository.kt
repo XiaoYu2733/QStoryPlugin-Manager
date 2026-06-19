@@ -33,6 +33,7 @@ object PluginRepository {
 
     private const val REFRESH_INTERVAL_MS = 30_000L
     private const val CLEANUP_INTERVAL_MS = 12 * 60 * 60 * 1000L
+    private const val KEY_LAST_CLEANUP = "last_cleanup_time"
 
     private val service get() = RetrofitClient.pluginService
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -62,6 +63,7 @@ object PluginRepository {
         cacheStorage = PluginCacheStorage(context.applicationContext)
         runBlocking(Dispatchers.IO) {
             loadPersistedCache()
+            cleanupIfNeeded()
         }
         scriptListActive.set(true)
         statisticsActive.set(true)
@@ -71,13 +73,13 @@ object PluginRepository {
         }
         refreshJob = scope.launch {
             while (isActive) {
-                delay(REFRESH_INTERVAL_MS.milliseconds)
+                delay(REFRESH_INTERVAL_MS)
                 refreshAll(force = true)
             }
         }
         cleanupJob = scope.launch {
             while (isActive) {
-                delay(CLEANUP_INTERVAL_MS.milliseconds)
+                delay(CLEANUP_INTERVAL_MS)
                 clearDetailsAndAiReviewsCache()
             }
         }
@@ -208,8 +210,18 @@ object PluginRepository {
         activeAiReviewIds.forEach { fetchAiReview(it, force = force) }
     }
 
+    private fun cleanupIfNeeded() {
+        val storage = cacheStorage ?: return
+        val lastCleanup = storage.loadLastFetch(KEY_LAST_CLEANUP)
+        if (lastCleanup > 0L && System.currentTimeMillis() - lastCleanup < CLEANUP_INTERVAL_MS) {
+            return
+        }
+        clearDetailsAndAiReviewsCache()
+    }
+
     private fun clearDetailsAndAiReviewsCache() {
         cacheStorage?.clearDetailsAndAiReviewsCache()
+        cacheStorage?.saveLastFetch(KEY_LAST_CLEANUP, System.currentTimeMillis())
         detailFlows.clear()
         aiReviewFlows.clear()
         lastFetchTimes.keys.removeAll { key ->
