@@ -21,6 +21,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.time.Duration.Companion.milliseconds
 
 data class CachedState<T>(
     val data: T? = null,
@@ -31,12 +32,14 @@ data class CachedState<T>(
 object PluginRepository {
 
     private const val REFRESH_INTERVAL_MS = 30_000L
+    private const val CLEANUP_INTERVAL_MS = 12 * 60 * 60 * 1000L
 
     private val service get() = RetrofitClient.pluginService
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     private var cacheStorage: PluginCacheStorage? = null
     private var refreshJob: Job? = null
+    private var cleanupJob: Job? = null
 
     private val _scriptList = MutableStateFlow(CachedState<List<ScriptListItem>>(isLoading = true))
     val scriptList: StateFlow<CachedState<List<ScriptListItem>>> = _scriptList.asStateFlow()
@@ -68,8 +71,14 @@ object PluginRepository {
         }
         refreshJob = scope.launch {
             while (isActive) {
-                delay(REFRESH_INTERVAL_MS)
+                delay(REFRESH_INTERVAL_MS.milliseconds)
                 refreshAll(force = true)
+            }
+        }
+        cleanupJob = scope.launch {
+            while (isActive) {
+                delay(CLEANUP_INTERVAL_MS.milliseconds)
+                clearDetailsAndAiReviewsCache()
             }
         }
     }
@@ -197,6 +206,15 @@ object PluginRepository {
         if (statisticsActive.get()) fetchStatistics(force = force)
         activeDetailIds.forEach { fetchScriptDetail(it, force = force) }
         activeAiReviewIds.forEach { fetchAiReview(it, force = force) }
+    }
+
+    private fun clearDetailsAndAiReviewsCache() {
+        cacheStorage?.clearDetailsAndAiReviewsCache()
+        detailFlows.clear()
+        aiReviewFlows.clear()
+        lastFetchTimes.keys.removeAll { key ->
+            key.startsWith("$KEY_SCRIPT_DETAIL:") || key.startsWith("$KEY_AI_REVIEW:")
+        }
     }
 
     private fun shouldFetch(key: String, force: Boolean): Boolean {

@@ -73,6 +73,27 @@ internal class PluginCacheStorage(context: Context) {
         file.writeText(gson.toJson(map))
     }
 
+    fun clearDetailsAndAiReviewsCache() {
+        detailsDir.listFiles()?.forEach { it.delete() }
+        aiReviewsDir.listFiles()?.forEach { it.delete() }
+        cleanFetchTimes()
+    }
+
+    private fun cleanFetchTimes() {
+        val file = File(cacheDir, "fetch_times.json")
+        if (!file.exists()) return
+        runCatching {
+            val map: Map<String, Long> = gson.fromJson(
+                file.readText(),
+                object : TypeToken<Map<String, Long>>() {}.type,
+            )
+            val cleaned = map.filterKeys { key ->
+                !key.startsWith("script_detail:") && !key.startsWith("ai_review:")
+            }
+            file.writeText(gson.toJson(cleaned))
+        }
+    }
+
     private inline fun <reified T> readJson(file: File, type: java.lang.reflect.Type): T? {
         if (!file.exists()) return null
         return runCatching { gson.fromJson<T>(file.readText(), type) }.getOrNull()
