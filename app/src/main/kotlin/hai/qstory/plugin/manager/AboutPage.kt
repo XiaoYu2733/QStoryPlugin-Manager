@@ -148,9 +148,9 @@ fun AboutPage() {
             AdaptiveCard(modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp).padding(bottom = 12.dp)) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     AdaptiveText(
-                        text = "QStory 脚本管理器，用于浏览、下载和管理 QStory 在线脚本。\n\n" +
+                        text = "QStory脚本管理器，用于浏览、下载和QStory脚本。\n\n" +
                                 "使用脚本请自行辨别脚本是否包含危险功能，对所加载的脚本负责。\n\n" +
-                                "本项目 100% 开源，仅供学习交流使用。脚本内容版权归原作者所有。",
+                                "项目100%开源，仅供学习交流使用。",
                         fontSize = 15.sp,
                     )
                 }
