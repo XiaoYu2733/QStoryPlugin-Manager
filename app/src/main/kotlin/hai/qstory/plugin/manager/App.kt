@@ -314,7 +314,7 @@ fun App(
                             HorizontalPager(
                                 state = pagerState,
                                 modifier = Modifier
-                                    .padding(top = innerPadding.calculateTopPadding(), bottom = bottomPadding)
+                                    .padding(bottom = bottomPadding)
                                     .then(if (enableFloatingBottomBar && enableFloatingBottomBarBlur) Modifier.layerBackdrop(backdrop) else Modifier),
                             ) { page ->
                                 when (page) {

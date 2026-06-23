@@ -8,8 +8,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
@@ -60,6 +64,7 @@ fun StatisticsPage() {
     val enableBlur = PreferencesManager.enableBlur
     val backdrop = rememberBlurBackdrop(enableBlur)
     val blurActive = backdrop != null
+    val statusBarHeightDp = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
 
     Box(
         modifier = Modifier.fillMaxSize()
@@ -71,11 +76,11 @@ fun StatisticsPage() {
                 state = listState,
                 modifier = Modifier.fillMaxSize()
             ) {
-                item {
-                    Spacer(modifier = Modifier.height(48.dp))
-                }
+            item {
+                Spacer(modifier = Modifier.height(statusBarHeightDp + 56.dp))
+            }
 
-                when {
+            when {
                     isLoading -> {
                         item {
                             Box(
@@ -135,17 +140,18 @@ fun StatisticsPage() {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .statusBarsPadding()
                     .then(
                         if (!blurActive) Modifier.background(MiuixTheme.colorScheme.surface)
                         else Modifier
-                    )
+                    ),
+                contentAlignment = Alignment.Center
             ) {
-                Row(
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(48.dp),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically,
+                        .height(56.dp),
+                    contentAlignment = Alignment.Center
                 ) {
                     if (showTopBar) {
                         Text(
