@@ -115,6 +115,16 @@ fun HomePage(
 
     val statusOptions = listOf("全部状态", "待审核", "已通过", "未通过")
 
+    val listState = rememberLazyListState()
+    val showTopBar by remember {
+        derivedStateOf {
+            listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 80
+        }
+    }
+    val enableBlur = PreferencesManager.enableBlur
+    val backdrop = rememberBlurBackdrop(enableBlur)
+    val blurActive = backdrop != null
+
     val filteredPlugins = remember(pluginList, selectedTag, selectedStatus, searchText) {
         pluginList.filter { plugin ->
             val tagMatch = if (selectedTag == "全部") {
@@ -142,10 +152,21 @@ fun HomePage(
         }
     }
 
-    LazyColumn(
+    Box(
         modifier = Modifier.fillMaxSize()
     ) {
-        // 搜索和筛选栏
+        Box(
+            modifier = if (blurActive) Modifier.fillMaxSize().layerBackdrop(backdrop!!) else Modifier.fillMaxSize()
+        ) {
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                item {
+                    Spacer(modifier = Modifier.height(48.dp))
+                }
+
+                // 搜索和筛选栏
         item {
             Column(
                 modifier = Modifier
@@ -174,11 +195,14 @@ fun HomePage(
                             }
                         )
                     }
-                    OverlayDropdownMenu(
-                        entry = statusEntry,
-                        title = selectedStatus,
+                    Card(
                         modifier = Modifier.weight(1f),
-                    )
+                    ) {
+                        OverlayDropdownMenu(
+                            entry = statusEntry,
+                            title = selectedStatus,
+                        )
+                    }
                     val tagEntry = remember(selectedTag) {
                         DropdownEntry(
                             items = SCRIPT_TAGS.map { option ->
@@ -190,11 +214,14 @@ fun HomePage(
                             }
                         )
                     }
-                    OverlayDropdownMenu(
-                        entry = tagEntry,
-                        title = selectedTag,
+                    Card(
                         modifier = Modifier.weight(1f),
-                    )
+                    ) {
+                        OverlayDropdownMenu(
+                            entry = tagEntry,
+                            title = selectedTag,
+                        )
+                    }
                 }
             }
         }
@@ -251,8 +278,36 @@ fun HomePage(
         }
 
         item { Spacer(modifier = Modifier.height(80.dp)) }
-    }
+            }
+        }
 
+        BlurredBar(backdrop = backdrop) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .then(
+                        if (!blurActive) Modifier.background(MiuixTheme.colorScheme.surface)
+                        else Modifier
+                    )
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    if (showTopBar) {
+                        Text(
+                            text = "QStoryPlugin",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium,
+                        )
+                    }
+                }
+            }
+        }
+    }
 }
 
 private fun getStatusLabel(plugin: ScriptListItem): Pair<String, Color> {

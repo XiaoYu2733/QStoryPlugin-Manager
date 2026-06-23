@@ -4,7 +4,9 @@ import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -15,9 +17,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -33,16 +37,21 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import hai.qstory.plugin.manager.preferences.PreferencesManager
 import hai.qstory.plugin.manager.ui.component.AdaptiveCard
 import hai.qstory.plugin.manager.ui.component.AdaptiveSmallTitle
 import hai.qstory.plugin.manager.ui.component.AdaptiveText
 import hai.qstory.plugin.manager.ui.component.adaptiveOnSurfaceVariantSummary
 import hai.qstory.plugin.manager.ui.theme.LocalUiMode
 import hai.qstory.plugin.manager.ui.theme.UiMode
+import hai.qstory.plugin.manager.ui.util.BlurredBar
+import hai.qstory.plugin.manager.ui.util.rememberBlurBackdrop
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import top.yukonga.miuix.kmp.basic.Icon as MiuixIcon
+import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import java.net.URL
 
@@ -91,7 +100,29 @@ fun AboutPage() {
         }
     }
 
-    LazyColumn(modifier = Modifier.fillMaxSize()) {
+    val listState = rememberLazyListState()
+    val showTopBar by remember {
+        derivedStateOf {
+            listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 80
+        }
+    }
+    val enableBlur = PreferencesManager.enableBlur
+    val backdrop = rememberBlurBackdrop(enableBlur)
+    val blurActive = backdrop != null
+
+    Box(
+        modifier = Modifier.fillMaxSize()
+    ) {
+        Box(
+            modifier = if (blurActive) Modifier.fillMaxSize().layerBackdrop(backdrop!!) else Modifier.fillMaxSize()
+        ) {
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxSize()
+            ) {
+                item {
+                    Spacer(modifier = Modifier.height(48.dp))
+                }
         // ── 头部 ──
         item {
             Column(
@@ -303,6 +334,35 @@ fun AboutPage() {
         }
 
         item { Spacer(modifier = Modifier.height(80.dp)) }
+            }
+        }
+
+        BlurredBar(backdrop = backdrop) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .then(
+                        if (!blurActive) Modifier.background(MiuixTheme.colorScheme.surface)
+                        else Modifier
+                    )
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    if (showTopBar) {
+                        Text(
+                            text = "QStory Plugin Manager",
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium,
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 
