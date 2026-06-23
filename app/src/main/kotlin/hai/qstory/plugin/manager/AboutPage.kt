@@ -165,7 +165,7 @@ fun AboutPage() {
                 Spacer(modifier = Modifier.height(4.dp))
 
                 AdaptiveText(
-                    text = "v${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
+                    text = "v${BuildConfig.VERSION_NAME}",
                     color = adaptiveOnSurfaceVariantSummary(),
                     fontSize = 14.sp,
                 )
