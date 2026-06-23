@@ -54,7 +54,6 @@ import hai.qstory.plugin.manager.preferences.PreferencesManager
 import hai.qstory.plugin.manager.repository.PluginRepository
 import hai.qstory.plugin.manager.ui.component.AdaptiveButton
 import hai.qstory.plugin.manager.ui.component.AdaptiveCard
-import hai.qstory.plugin.manager.ui.component.AdaptiveDropdownField
 import hai.qstory.plugin.manager.ui.component.AdaptiveInfiniteProgressIndicator
 import hai.qstory.plugin.manager.ui.component.AdaptiveText
 import hai.qstory.plugin.manager.ui.component.AdaptiveTextField
@@ -156,27 +155,29 @@ fun HomePage(
                     label = "搜索脚本",
                     modifier = Modifier.fillMaxWidth()
                 )
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                Spacer(modifier = Modifier.height(10.dp))
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    AdaptiveDropdownField(
-                        selectedText = selectedStatus,
-                        items = statusOptions,
-                        onItemSelected = { index ->
-                            selectedStatus = statusOptions[index]
-                        },
-                        modifier = Modifier.weight(1f)
-                    )
-                    AdaptiveDropdownField(
-                        selectedText = selectedTag,
-                        items = SCRIPT_TAGS,
-                        onItemSelected = { index ->
-                            selectedTag = SCRIPT_TAGS[index]
-                        },
-                        modifier = Modifier.weight(1f)
-                    )
+                    items(statusOptions.size) { index ->
+                        FilterChip(
+                            text = statusOptions[index],
+                            selected = statusOptions[index] == selectedStatus,
+                            onClick = { selectedStatus = statusOptions[index] },
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    items(SCRIPT_TAGS.size) { index ->
+                        FilterChip(
+                            text = SCRIPT_TAGS[index],
+                            selected = SCRIPT_TAGS[index] == selectedTag,
+                            onClick = { selectedTag = SCRIPT_TAGS[index] },
+                        )
+                    }
                 }
             }
         }
@@ -234,6 +235,7 @@ fun HomePage(
 
         item { Spacer(modifier = Modifier.height(80.dp)) }
     }
+
 }
 
 private fun getStatusLabel(plugin: ScriptListItem): Pair<String, Color> {
@@ -997,6 +999,39 @@ fun TagChip(tag: String) {
         AdaptiveText(
             text = tag,
             color = adaptiveOnSecondaryContainer()
+        )
+    }
+}
+
+@Composable
+private fun FilterChip(
+    text: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    val uiMode = LocalUiMode.current
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(20.dp))
+            .background(
+                if (selected) adaptivePrimaryColor()
+                else adaptiveSecondaryContainer().copy(alpha = 0.5f)
+            )
+            .clickable(onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 8.dp),
+    ) {
+        AdaptiveText(
+            text = text,
+            fontSize = 13.sp,
+            fontWeight = if (selected) FontWeight.Medium else FontWeight.Normal,
+            color = if (selected) {
+                when (uiMode) {
+                    UiMode.Material -> M3MaterialTheme.colorScheme.onPrimary
+                    UiMode.Miuix -> MiuixTheme.colorScheme.onPrimary
+                }
+            } else {
+                adaptiveOnSecondaryContainer()
+            },
         )
     }
 }
