@@ -69,12 +69,15 @@ import hai.qstory.plugin.manager.ui.util.rememberBlurBackdrop
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.basic.DropdownEntry
+import top.yukonga.miuix.kmp.basic.DropdownItem
 import top.yukonga.miuix.kmp.basic.HorizontalDivider
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.menu.OverlayDropdownMenu
 import top.yukonga.miuix.kmp.icon.extended.Back
 import top.yukonga.miuix.kmp.icon.extended.Download
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -155,29 +158,43 @@ fun HomePage(
                     label = "搜索脚本",
                     modifier = Modifier.fillMaxWidth()
                 )
-                Spacer(modifier = Modifier.height(10.dp))
-                LazyRow(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    items(statusOptions.size) { index ->
-                        FilterChip(
-                            text = statusOptions[index],
-                            selected = statusOptions[index] == selectedStatus,
-                            onClick = { selectedStatus = statusOptions[index] },
-                        )
-                    }
-                }
                 Spacer(modifier = Modifier.height(8.dp))
-                LazyRow(
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    items(SCRIPT_TAGS.size) { index ->
-                        FilterChip(
-                            text = SCRIPT_TAGS[index],
-                            selected = SCRIPT_TAGS[index] == selectedTag,
-                            onClick = { selectedTag = SCRIPT_TAGS[index] },
+                    val statusEntry = remember(selectedStatus) {
+                        DropdownEntry(
+                            items = statusOptions.map { option ->
+                                DropdownItem(
+                                    text = option,
+                                    selected = option == selectedStatus,
+                                    onClick = { selectedStatus = option },
+                                )
+                            }
                         )
                     }
+                    OverlayDropdownMenu(
+                        entry = statusEntry,
+                        title = selectedStatus,
+                        modifier = Modifier.weight(1f),
+                    )
+                    val tagEntry = remember(selectedTag) {
+                        DropdownEntry(
+                            items = SCRIPT_TAGS.map { option ->
+                                DropdownItem(
+                                    text = option,
+                                    selected = option == selectedTag,
+                                    onClick = { selectedTag = option },
+                                )
+                            }
+                        )
+                    }
+                    OverlayDropdownMenu(
+                        entry = tagEntry,
+                        title = selectedTag,
+                        modifier = Modifier.weight(1f),
+                    )
                 }
             }
         }
@@ -1003,35 +1020,3 @@ fun TagChip(tag: String) {
     }
 }
 
-@Composable
-private fun FilterChip(
-    text: String,
-    selected: Boolean,
-    onClick: () -> Unit,
-) {
-    val uiMode = LocalUiMode.current
-    Box(
-        modifier = Modifier
-            .clip(RoundedCornerShape(20.dp))
-            .background(
-                if (selected) adaptivePrimaryColor()
-                else adaptiveSecondaryContainer().copy(alpha = 0.5f)
-            )
-            .clickable(onClick = onClick)
-            .padding(horizontal = 14.dp, vertical = 8.dp),
-    ) {
-        AdaptiveText(
-            text = text,
-            fontSize = 13.sp,
-            fontWeight = if (selected) FontWeight.Medium else FontWeight.Normal,
-            color = if (selected) {
-                when (uiMode) {
-                    UiMode.Material -> M3MaterialTheme.colorScheme.onPrimary
-                    UiMode.Miuix -> MiuixTheme.colorScheme.onPrimary
-                }
-            } else {
-                adaptiveOnSecondaryContainer()
-            },
-        )
-    }
-}
