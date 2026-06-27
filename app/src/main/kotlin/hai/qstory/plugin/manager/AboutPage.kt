@@ -4,7 +4,6 @@ import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,7 +17,6 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -48,7 +46,7 @@ import hai.qstory.plugin.manager.ui.component.AdaptiveText
 import hai.qstory.plugin.manager.ui.component.adaptiveOnSurfaceVariantSummary
 import hai.qstory.plugin.manager.ui.theme.LocalUiMode
 import hai.qstory.plugin.manager.ui.theme.UiMode
-import hai.qstory.plugin.manager.ui.util.BlurredBar
+import hai.qstory.plugin.manager.ui.util.TopBarSurface
 import hai.qstory.plugin.manager.ui.util.rememberBlurBackdrop
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -342,30 +340,19 @@ fun AboutPage() {
         }
         }
 
-        BlurredBar(backdrop = backdrop) {
+        TopBarSurface(backdrop = backdrop, blurActive = blurActive) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .statusBarsPadding()
-                    .then(
-                        if (!blurActive) Modifier.background(MiuixTheme.colorScheme.surface)
-                        else Modifier
-                    ),
+                    .height(56.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (showTopBar) {
-                        Text(
-                            text = "QStory Plugin Manager",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Medium,
-                        )
-                    }
+                if (showTopBar) {
+                    Text(
+                        text = "QStory Plugin Manager",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium,
+                    )
                 }
             }
         }

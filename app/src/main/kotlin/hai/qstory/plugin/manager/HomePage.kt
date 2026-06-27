@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -67,7 +66,7 @@ import hai.qstory.plugin.manager.ui.component.adaptivePrimaryColor
 import hai.qstory.plugin.manager.ui.component.adaptiveSecondaryContainer
 import hai.qstory.plugin.manager.ui.theme.LocalUiMode
 import hai.qstory.plugin.manager.ui.theme.UiMode
-import hai.qstory.plugin.manager.ui.util.BlurredBar
+import hai.qstory.plugin.manager.ui.util.TopBarSurface
 import hai.qstory.plugin.manager.ui.util.rememberBlurBackdrop
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -286,30 +285,19 @@ fun HomePage(
         }
         }
 
-        BlurredBar(backdrop = backdrop) {
+        TopBarSurface(backdrop = backdrop, blurActive = blurActive) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .statusBarsPadding()
-                    .then(
-                        if (!blurActive) Modifier.background(MiuixTheme.colorScheme.surface)
-                        else Modifier
-                    ),
+                    .height(56.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (showTopBar) {
-                        Text(
-                            text = "QStoryPlugin",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Medium,
-                        )
-                    }
+                if (showTopBar) {
+                    Text(
+                        text = "QStoryPlugin",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium,
+                    )
                 }
             }
         }
@@ -648,23 +636,14 @@ fun PluginDetailPage(
         }
 
         // 顶栏 — 始终显示，下滑时出现模糊/背景
-        BlurredBar(backdrop = backdrop) {
-            Box(
+        TopBarSurface(backdrop = backdrop, blurActive = blurActive) {
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .then(
-                        if (!blurActive) Modifier.background(MiuixTheme.colorScheme.surface)
-                        else Modifier
-                    )
+                    .height(56.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .statusBarsPadding()
-                        .height(56.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
                 IconButton(
                     onClick = onBack,
                     modifier = Modifier.size(44.dp)
@@ -713,7 +692,6 @@ fun PluginDetailPage(
                         }
                     }
                 }
-            }
             }
         }
 

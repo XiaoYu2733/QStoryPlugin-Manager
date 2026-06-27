@@ -2,6 +2,7 @@ package hai.qstory.plugin.manager
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Dashboard
@@ -25,7 +26,9 @@ fun SettingsPageMaterial(
     val uiMode = LocalUiMode.current
 
     LazyColumn(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
+            .statusBarsPadding()
     ) {
         item {
             Text(

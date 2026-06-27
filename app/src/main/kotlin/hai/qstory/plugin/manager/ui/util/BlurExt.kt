@@ -1,6 +1,9 @@
 package hai.qstory.plugin.manager.ui.util
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
@@ -45,5 +48,27 @@ fun BlurredBar(
         },
     ) {
         content()
+    }
+}
+
+@Composable
+fun TopBarSurface(
+    backdrop: LayerBackdrop?,
+    blurActive: Boolean,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
+    BlurredBar(backdrop = backdrop, blurActive = blurActive) {
+        Box(
+            modifier = modifier
+                .fillMaxWidth()
+                .then(
+                    if (!blurActive) Modifier.background(MiuixTheme.colorScheme.surface)
+                    else Modifier
+                )
+                .statusBarsPadding(),
+        ) {
+            content()
+        }
     }
 }

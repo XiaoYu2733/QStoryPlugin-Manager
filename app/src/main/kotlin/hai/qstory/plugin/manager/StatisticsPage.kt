@@ -1,6 +1,5 @@
 package hai.qstory.plugin.manager
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,7 +12,6 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
@@ -36,12 +34,11 @@ import hai.qstory.plugin.manager.ui.component.AdaptiveSmallTitle
 import hai.qstory.plugin.manager.ui.component.AdaptiveText
 import hai.qstory.plugin.manager.ui.component.adaptiveOnSurfaceVariantSummary
 import hai.qstory.plugin.manager.ui.component.adaptivePrimaryColor
-import hai.qstory.plugin.manager.ui.util.BlurredBar
+import hai.qstory.plugin.manager.ui.util.TopBarSurface
 import hai.qstory.plugin.manager.ui.util.rememberBlurBackdrop
 import top.yukonga.miuix.kmp.blur.layerBackdrop
 import top.yukonga.miuix.kmp.basic.LinearProgressIndicator
 import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
 fun StatisticsPage() {
@@ -136,30 +133,19 @@ fun StatisticsPage() {
             }
         }
 
-        BlurredBar(backdrop = backdrop) {
+        TopBarSurface(backdrop = backdrop, blurActive = blurActive) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .statusBarsPadding()
-                    .then(
-                        if (!blurActive) Modifier.background(MiuixTheme.colorScheme.surface)
-                        else Modifier
-                    ),
+                    .height(56.dp),
                 contentAlignment = Alignment.Center
             ) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(56.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    if (showTopBar) {
-                        Text(
-                            text = "平台统计",
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Medium,
-                        )
-                    }
+                if (showTopBar) {
+                    Text(
+                        text = "平台统计",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Medium,
+                    )
                 }
             }
         }
