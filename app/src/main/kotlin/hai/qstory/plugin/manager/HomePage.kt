@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -19,11 +20,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material3.CircularProgressIndicator
@@ -66,6 +70,7 @@ import hai.qstory.plugin.manager.ui.component.adaptivePrimaryColor
 import hai.qstory.plugin.manager.ui.component.adaptiveSecondaryContainer
 import hai.qstory.plugin.manager.ui.theme.LocalUiMode
 import hai.qstory.plugin.manager.ui.theme.UiMode
+import hai.qstory.plugin.manager.ui.util.BlurredBar
 import hai.qstory.plugin.manager.ui.util.TopBarSurface
 import hai.qstory.plugin.manager.ui.util.rememberBlurBackdrop
 import kotlinx.coroutines.Dispatchers
@@ -74,6 +79,7 @@ import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.DropdownEntry
 import top.yukonga.miuix.kmp.basic.DropdownItem
 import top.yukonga.miuix.kmp.basic.HorizontalDivider
+import top.yukonga.miuix.kmp.basic.TabRow
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.Text
@@ -383,13 +389,6 @@ fun PluginDetailPage(
     val aiReview = aiReviewState.data
     val aiReviewLoading = aiReviewState.isLoading && aiReview == null
 
-    val listState = rememberLazyListState()
-    val showTopBar by remember {
-        derivedStateOf {
-            listState.firstVisibleItemIndex > 0 || listState.firstVisibleItemScrollOffset > 80
-        }
-    }
-
     val enableBlur = PreferencesManager.enableBlur
     val backdrop = rememberBlurBackdrop(enableBlur)
     val blurActive = backdrop != null
@@ -439,259 +438,130 @@ fun PluginDetailPage(
         }
     }
 
+    val tabs = listOf("自述", "AI 评审", "信息")
+    val pagerState = rememberPagerState(initialPage = 0, pageCount = { tabs.size })
+    val statusBarHeightDp = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val headerHeight = statusBarHeightDp + 56.dp + 48.dp
+
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
-        Box(
-            modifier = if (blurActive) Modifier.fillMaxSize().layerBackdrop(backdrop!!) else Modifier.fillMaxSize()
-        ) {
-            when {
-                isLoading -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        AdaptiveInfiniteProgressIndicator()
-                    }
+        // 内容层 — 每个 tab 页面自己负责 layerBackdrop（参照 KSU）
+        when {
+            isLoading -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    AdaptiveInfiniteProgressIndicator()
                 }
-                plugin == null -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        AdaptiveText(
-                            text = "脚本不存在",
-                            color = adaptiveOnSurfaceSecondary()
-                        )
-                    }
+            }
+            plugin == null -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    AdaptiveText(
+                        text = "脚本不存在",
+                        color = adaptiveOnSurfaceSecondary()
+                    )
                 }
-                else -> {
-                    LazyColumn(
-                        state = listState,
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                    item {
-                        Spacer(modifier = Modifier.height(96.dp))
-                    }
+            }
+            else -> {
+                val currentPlugin = plugin!!
 
-                    // 头部大卡片
-                    item {
-                        AdaptiveCard(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 20.dp)
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(20.dp)
-                            ) {
-                                Row(
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    val images = plugin!!.images
-                                    val iconUrl = images?.let {
-                                        if (it.iconStatus == 1 && !it.iconFilename.isNullOrEmpty()) {
-                                            "https://plugin.suzhelan.top/api/plugin/images/${plugin!!.cloudId}/${it.iconFilename}"
-                                        } else null
-                                    }
-
-                                    if (iconUrl != null) {
-                                        AsyncImage(
-                                            model = ImageRequest.Builder(LocalContext.current)
-                                                .data(iconUrl)
-                                                .crossfade(true)
-                                                .build(),
-                                            contentDescription = "脚本图标",
-                                            modifier = Modifier
-                                                .size(64.dp)
-                                                .clip(RoundedCornerShape(16.dp))
-                                        )
-                                        Spacer(modifier = Modifier.width(16.dp))
-                                    }
-
-                                    Column {
-                                        AdaptiveText(
-                                            text = plugin!!.name,
-                                            fontSize = 24.sp,
-                                            fontWeight = FontWeight.Bold
-                                        )
-                                        Spacer(modifier = Modifier.height(4.dp))
-                                        AdaptiveText(
-                                            text = "v${plugin!!.version}",
-                                            color = adaptiveOnSurfaceSecondary()
-                                        )
-                                    }
-                                }
-
-                                Spacer(modifier = Modifier.height(20.dp))
-
-                                AdaptiveText(
-                                    text = "作者: ${plugin!!.author}",
-                                    color = adaptiveOnSurfaceSecondary()
-                                )
-
-                                Spacer(modifier = Modifier.height(12.dp))
-
-                                AdaptiveText(
-                                    text = "ID: ${plugin!!.pluginId}",
-                                    color = adaptiveOnSurfaceSecondary()
-                                )
-
-                                if (plugin!!.tags.isNotEmpty()) {
-                                    Spacer(modifier = Modifier.height(12.dp))
-                                    AdaptiveText(
-                                        text = "标签：${plugin!!.tags.joinToString(" ")}",
-                                        color = adaptiveOnSurfaceSecondary()
-                                    )
-                                }
-                            }
+                HorizontalPager(
+                    state = pagerState,
+                    modifier = Modifier.fillMaxSize(),
+                ) { page ->
+                    val pageModifier = if (blurActive) Modifier.fillMaxSize().layerBackdrop(backdrop!!) else Modifier.fillMaxSize()
+                    Box(modifier = pageModifier) {
+                        when (page) {
+                            0 -> ReadmeTab(plugin = currentPlugin, topPadding = headerHeight)
+                            1 -> AiReviewTab(aiReview = aiReview, isLoading = aiReviewLoading, topPadding = headerHeight)
+                            2 -> InfoTab(plugin = currentPlugin, topPadding = headerHeight)
                         }
-                    }
-
-                    // 简介卡片
-                    item {
-                        AdaptiveCard(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 20.dp, vertical = 8.dp)
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(18.dp)
-                            ) {
-                                AdaptiveText(
-                                    text = "简介",
-                                    color = adaptiveOnSurfaceSecondary()
-                                )
-                                Spacer(modifier = Modifier.height(10.dp))
-                                SelectionContainer {
-                                    AdaptiveText(
-                                        text = plugin!!.description,
-                                        fontSize = 16.sp
-                                    )
-                                }
-                            }
-                        }
-                    }
-
-                    // AI 评审卡片
-                    item {
-                        AiReviewCard(aiReview = aiReview, isLoading = aiReviewLoading)
-                    }
-
-                    // 预览图卡片
-                    val images = plugin!!.images
-                    if (images?.previewStatus == 1 && !images.previewFilename.isNullOrEmpty()) {
-                        item {
-                            AdaptiveCard(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 20.dp, vertical = 8.dp)
-                            ) {
-                                Column(
-                                    modifier = Modifier.padding(18.dp)
-                                ) {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        AdaptiveText(
-                                            text = "预览图",
-                                            color = adaptiveOnSurfaceSecondary()
-                                        )
-                                        Spacer(modifier = Modifier.width(8.dp))
-                                        AdaptiveText(
-                                            text = "右滑显示更多",
-                                            fontSize = 11.sp,
-                                            color = adaptiveOnSurfaceVariantSummary()
-                                        )
-                                    }
-                                    Spacer(modifier = Modifier.height(10.dp))
-                                    LazyRow(
-                                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                                    ) {
-                                        items(images.previewFilename) { filename ->
-                                            val previewUrl = "https://plugin.suzhelan.top/api/plugin/images/${plugin!!.cloudId}/$filename"
-                                            AsyncImage(
-                                                model = ImageRequest.Builder(LocalContext.current)
-                                                    .data(previewUrl)
-                                                    .crossfade(true)
-                                                    .build(),
-                                                contentDescription = "预览图",
-                                                modifier = Modifier
-                                                    .width(260.dp)
-                                                    .clip(RoundedCornerShape(12.dp))
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    item {
-                        Spacer(modifier = Modifier.height(20.dp))
                     }
                 }
             }
         }
 
-        }
-
-        // 顶栏 — 始终显示，下滑时出现模糊/背景
-        TopBarSurface(backdrop = backdrop, blurActive = blurActive) {
-            Row(
+        // 顶栏 + Tab — 共用模糊（参照 KSU 的 BlurredBar 包裹 TopAppBar + bottomContent TabRow）
+        BlurredBar(backdrop = backdrop, blurActive = blurActive) {
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                    .then(
+                        if (!blurActive) Modifier.background(MiuixTheme.colorScheme.surface)
+                        else Modifier
+                    )
+                    .statusBarsPadding()
             ) {
-                IconButton(
-                    onClick = onBack,
-                    modifier = Modifier.size(44.dp)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(
-                        imageVector = MiuixIcons.Back,
-                        contentDescription = "返回",
-                        tint = MiuixTheme.colorScheme.onBackground
-                    )
-                }
-
-                if (showTopBar && plugin != null) {
-                    AdaptiveText(
-                        text = plugin!!.name,
-                        fontWeight = FontWeight.Medium,
-                        maxLines = 1,
-                        modifier = Modifier.weight(1f).padding(horizontal = 12.dp)
-                    )
-                } else {
-                    Spacer(modifier = Modifier.weight(1f))
-                }
-
-                when {
-                    isDownloading -> {
-                        AdaptiveText(
-                            text = "${downloadProgress}%",
-                            color = adaptivePrimaryColor(),
-                            modifier = Modifier.padding(end = 16.dp)
+                    IconButton(
+                        onClick = onBack,
+                        modifier = Modifier.size(44.dp)
+                    ) {
+                        Icon(
+                            imageVector = MiuixIcons.Back,
+                            contentDescription = "返回",
+                            tint = MiuixTheme.colorScheme.onBackground
                         )
                     }
-                    else -> {
-                        val iconTint = when (downloadState) {
-                            is DownloadState.Success -> Color(0xFF4CAF50)
-                            is DownloadState.Failed -> Color(0xFFF44336)
-                            else -> MiuixTheme.colorScheme.onBackground
-                        }
-                        IconButton(
-                            onClick = { startDownload() },
-                            modifier = Modifier.size(44.dp)
-                        ) {
-                            Icon(
-                                imageVector = MiuixIcons.Download,
-                                contentDescription = "下载",
-                                tint = iconTint
+
+                    if (plugin != null) {
+                        AdaptiveText(
+                            text = plugin!!.name,
+                            fontWeight = FontWeight.Medium,
+                            maxLines = 1,
+                            modifier = Modifier.weight(1f).padding(horizontal = 12.dp)
+                        )
+                    } else {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+
+                    when {
+                        isDownloading -> {
+                            AdaptiveText(
+                                text = "${downloadProgress}%",
+                                color = adaptivePrimaryColor(),
+                                modifier = Modifier.padding(end = 16.dp)
                             )
+                        }
+                        else -> {
+                            val iconTint = when (downloadState) {
+                                is DownloadState.Success -> Color(0xFF4CAF50)
+                                is DownloadState.Failed -> Color(0xFFF44336)
+                                else -> MiuixTheme.colorScheme.onBackground
+                            }
+                            IconButton(
+                                onClick = { startDownload() },
+                                modifier = Modifier.size(44.dp)
+                            ) {
+                                Icon(
+                                    imageVector = MiuixIcons.Download,
+                                    contentDescription = "下载",
+                                    tint = iconTint
+                                )
+                            }
                         }
                     }
                 }
+
+                TabRow(
+                    tabs = tabs,
+                    selectedTabIndex = pagerState.currentPage,
+                    onTabSelected = { index ->
+                        coroutineScope.launch { pagerState.animateScrollToPage(index) }
+                    },
+                    height = 48.dp,
+                )
             }
         }
 
@@ -767,86 +637,75 @@ fun AiReviewCard(
     aiReview: AiReviewRecord?,
     isLoading: Boolean
 ) {
-    AdaptiveCard(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 8.dp)
+            .padding(horizontal = 24.dp)
     ) {
-        Column(modifier = Modifier.padding(18.dp)) {
-            AdaptiveText(
-                text = "AI 评审",
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(12.dp))
-
-            when {
-                isLoading -> {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        AdaptiveInfiniteProgressIndicator(modifier = Modifier.size(20.dp))
-                        Spacer(modifier = Modifier.width(12.dp))
-                        AdaptiveText(
-                            text = "加载中...",
-                            color = adaptiveOnSurfaceSecondary()
-                        )
-                    }
-                }
-                aiReview == null -> {
+        when {
+            isLoading -> {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    AdaptiveInfiniteProgressIndicator(modifier = Modifier.size(20.dp))
+                    Spacer(modifier = Modifier.width(12.dp))
                     AdaptiveText(
-                        text = "该脚本尚未进行 AI 评审",
+                        text = "加载中...",
                         color = adaptiveOnSurfaceSecondary()
                     )
                 }
-                aiReview.reviewStatus == 0 -> {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
-                            color = Color(0xFFFF9800)
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
-                        AdaptiveText(
-                            text = "AI 评审中，请稍后查看...",
-                            color = Color(0xFFFF9800)
-                        )
-                    }
-                }
-                aiReview.reviewStatus == 2 -> {
-                    AdaptiveText(
-                        text = "AI 评审失败",
-                        color = Color(0xFFF44336)
+            }
+            aiReview == null -> {
+                AdaptiveText(
+                    text = "该脚本尚未进行 AI 评审",
+                    color = adaptiveOnSurfaceSecondary()
+                )
+            }
+            aiReview.reviewStatus == 0 -> {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(20.dp),
+                        color = Color(0xFFFF9800)
                     )
-                    if (!aiReview.errorMessage.isNullOrEmpty()) {
-                        Spacer(modifier = Modifier.height(6.dp))
-                        AdaptiveText(
-                            text = aiReview.errorMessage,
-                            color = adaptiveOnSurfaceSecondary()
-                        )
-                    }
+                    Spacer(modifier = Modifier.width(12.dp))
+                    AdaptiveText(
+                        text = "AI 评审中，请稍后查看...",
+                        color = Color(0xFFFF9800)
+                    )
                 }
-                aiReview.reviewStatus == 1 -> {
-                    val result = aiReview.reviewResult ?: return@AdaptiveCard
-
-                    // 风险等级摘要
+            }
+            aiReview.reviewStatus == 2 -> {
+                AdaptiveText(
+                    text = "AI 评审失败",
+                    color = Color(0xFFF44336)
+                )
+                if (!aiReview.errorMessage.isNullOrEmpty()) {
+                    Spacer(modifier = Modifier.height(6.dp))
+                    AdaptiveText(
+                        text = aiReview.errorMessage,
+                        color = adaptiveOnSurfaceSecondary()
+                    )
+                }
+            }
+            aiReview.reviewStatus == 1 -> {
+                val result = aiReview.reviewResult
+                if (result != null) {
                     RiskSummary(
                         riskLevel = result.riskLevel,
                         summary = result.summary,
                         passed = result.compliance.passed
                     )
 
-                    // 发现的问题
                     val issues = result.compliance.issues
                     if (!issues.isNullOrEmpty()) {
                         Spacer(modifier = Modifier.height(12.dp))
                         IssuesList(issues = issues)
                     }
 
-                    // 改进建议
                     val suggestions = result.suggestions
                     if (!suggestions.isNullOrEmpty()) {
                         Spacer(modifier = Modifier.height(12.dp))
                         SuggestionsList(suggestions = suggestions)
                     }
 
-                    // Token 与模型
                     Spacer(modifier = Modifier.height(12.dp))
                     HorizontalDivider(thickness = 0.5.dp)
                     Spacer(modifier = Modifier.height(12.dp))
@@ -947,68 +806,57 @@ private fun IssueItem(issue: ComplianceIssue) {
         else -> "提示"
     }
 
-    Card(
+    Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp)
+            .padding(vertical = 6.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(12.dp)
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(4.dp))
-                        .background(levelColor.copy(alpha = 0.15f))
-                        .padding(horizontal = 8.dp, vertical = 3.dp)
-                ) {
-                    AdaptiveText(
-                        text = levelLabel,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = levelColor
-                    )
-                }
-                Spacer(modifier = Modifier.width(8.dp))
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(levelColor.copy(alpha = 0.15f))
+                    .padding(horizontal = 8.dp, vertical = 3.dp)
+            ) {
                 AdaptiveText(
-                    text = issue.category,
+                    text = levelLabel,
                     fontSize = 11.sp,
-                    color = adaptiveOnSurfaceVariantSummary()
+                    fontWeight = FontWeight.SemiBold,
+                    color = levelColor
                 )
             }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
+            Spacer(modifier = Modifier.width(8.dp))
             AdaptiveText(
-                text = issue.message,
-                fontSize = 14.sp
+                text = issue.category,
+                fontSize = 11.sp,
+                color = adaptiveOnSurfaceVariantSummary()
             )
+        }
 
-            // 位置信息
-            if (!issue.location.isNullOrEmpty()) {
-                Spacer(modifier = Modifier.height(6.dp))
+        Spacer(modifier = Modifier.height(6.dp))
+
+        AdaptiveText(
+            text = issue.message,
+            fontSize = 14.sp
+        )
+
+        if (!issue.location.isNullOrEmpty()) {
+            Spacer(modifier = Modifier.height(4.dp))
+            AdaptiveText(
+                text = issue.location,
+                fontSize = 12.sp,
+                color = adaptiveOnSurfaceVariantSummary()
+            )
+        }
+
+        if (!issue.codeSnippet.isNullOrEmpty()) {
+            Spacer(modifier = Modifier.height(6.dp))
+            SelectionContainer {
                 AdaptiveText(
-                    text = issue.location,
+                    text = issue.codeSnippet,
                     fontSize = 12.sp,
-                    color = adaptiveOnSurfaceVariantSummary()
+                    color = adaptiveOnSurfaceVariantSummary(),
                 )
-            }
-
-            if (!issue.codeSnippet.isNullOrEmpty()) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    cornerRadius = 4.dp
-                ) {
-                    SelectionContainer {
-                        AdaptiveText(
-                            text = issue.codeSnippet,
-                            fontSize = 12.sp,
-                            color = adaptiveOnSurfaceVariantSummary(),
-                            modifier = Modifier.padding(8.dp)
-                        )
-                    }
-                }
             }
         }
     }
@@ -1055,6 +903,131 @@ fun TagChip(tag: String) {
         AdaptiveText(
             text = tag,
             color = adaptiveOnSecondaryContainer()
+        )
+    }
+}
+
+// ── 标签页 ──
+
+@Composable
+private fun ReadmeTab(
+    plugin: hai.qstory.plugin.manager.data.ScriptDetail,
+    topPadding: androidx.compose.ui.unit.Dp,
+) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(
+            start = 20.dp,
+            end = 20.dp,
+            top = topPadding + 12.dp,
+            bottom = 20.dp,
+        ),
+    ) {
+        item {
+            SelectionContainer {
+                AdaptiveText(
+                    text = plugin.description.ifBlank { "暂无简介" },
+                    fontSize = 15.sp,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun AiReviewTab(
+    aiReview: AiReviewRecord?,
+    isLoading: Boolean,
+    topPadding: androidx.compose.ui.unit.Dp,
+) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(
+            start = 20.dp,
+            end = 20.dp,
+            top = topPadding + 12.dp,
+            bottom = 20.dp,
+        ),
+    ) {
+        item {
+            AiReviewCard(aiReview = aiReview, isLoading = isLoading)
+        }
+    }
+}
+
+@Composable
+private fun InfoTab(
+    plugin: hai.qstory.plugin.manager.data.ScriptDetail,
+    topPadding: androidx.compose.ui.unit.Dp,
+) {
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(
+            start = 20.dp,
+            end = 20.dp,
+            top = topPadding + 12.dp,
+            bottom = 20.dp,
+        ),
+    ) {
+        item {
+            InfoRow("脚本作者", plugin.author)
+            InfoRow("脚本标识", plugin.pluginId)
+            InfoRow("脚本版本", plugin.version)
+            InfoRow("脚本标签", plugin.tags.joinToString(" · "))
+        }
+
+        // 预览图
+        val images = plugin.images
+        if (images?.previewStatus == 1 && !images.previewFilename.isNullOrEmpty()) {
+            item {
+                Spacer(modifier = Modifier.height(16.dp))
+                AdaptiveText(
+                    text = "预览图",
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp,
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                LazyRow(
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(images.previewFilename) { filename ->
+                        val previewUrl = "https://plugin.suzhelan.top/api/plugin/images/${plugin.cloudId}/$filename"
+                        AsyncImage(
+                            model = ImageRequest.Builder(LocalContext.current)
+                                .data(previewUrl)
+                                .crossfade(true)
+                                .build(),
+                            contentDescription = "预览图",
+                            modifier = Modifier
+                                .width(260.dp)
+                                .clip(RoundedCornerShape(12.dp))
+                        )
+                    }
+                }
+            }
+        }
+
+        item {
+            Spacer(modifier = Modifier.height(20.dp))
+        }
+    }
+}
+
+@Composable
+private fun InfoRow(label: String, value: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 5.dp),
+    ) {
+        AdaptiveText(
+            text = "$label：",
+            fontSize = 14.sp,
+            color = adaptiveOnSurfaceSecondary(),
+        )
+        AdaptiveText(
+            text = value,
+            fontSize = 14.sp,
         )
     }
 }

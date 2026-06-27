@@ -97,7 +97,7 @@ fun AboutPage() {
     LaunchedEffect(Unit) {
         withContext(Dispatchers.IO) {
             developers = listOf("XiaoYu2733", "suzhelan").mapNotNull { fetchGitHubUser(it) }
-            thanksUsers = listOf("HdShare", "HChenX").mapNotNull { fetchGitHubUser(it) }
+            thanksUsers = listOf("HdShare").mapNotNull { fetchGitHubUser(it) }
             genshinExpert = fetchGitHubUser("DJWSJ").copy(name = "原神高手")
         }
     }
