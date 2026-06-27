@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-    namespace = "hai.qstory.plugin.manager"
+    namespace = "top.lovehaifeng.qstory.manager"
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "hai.qstory.plugin.manager"
+        applicationId = "top.lovehaifeng.qstory.manager"
         minSdk = 24
         targetSdk = 37
         versionCode = 1

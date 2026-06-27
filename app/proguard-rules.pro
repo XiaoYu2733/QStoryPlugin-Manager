@@ -25,10 +25,10 @@
 }
 
 # === Model classes (must keep all for Gson reflection) ===
--keep class hai.qstory.plugin.manager.data.** { *; }
+-keep class top.lovehaifeng.qstory.manager.data.** { *; }
 
 # === Retrofit service ===
--keep interface hai.qstory.plugin.manager.network.** { *; }
+-keep interface top.lovehaifeng.qstory.manager.network.** { *; }
 -keepclassmembers,allowshrinking,allowobfuscation interface * {
     @retrofit2.http.* <methods>;
 }
@@ -48,15 +48,15 @@
 }
 
 # === Kotlin Serialization ===
--keep class hai.qstory.plugin.manager.**$$serializer { *; }
--keepclassmembers class hai.qstory.plugin.manager.** {
+-keep class top.lovehaifeng.qstory.manager.**$$serializer { *; }
+-keepclassmembers class top.lovehaifeng.qstory.manager.** {
     *** Companion;
 }
 -dontwarn kotlinx.serialization.**
 
 # === Navigation3 ===
--keep class hai.qstory.plugin.manager.Route { *; }
--keep class hai.qstory.plugin.manager.Route$** { *; }
+-keep class top.lovehaifeng.qstory.manager.Route { *; }
+-keep class top.lovehaifeng.qstory.manager.Route$** { *; }
 
 # === Compose runtime ===
 -keep class androidx.compose.runtime.** { *; }
