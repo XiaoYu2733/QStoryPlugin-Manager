@@ -72,11 +72,11 @@ dependencies {
     implementation(platform("androidx.compose:compose-bom:2024.12.01"))
 
     // MIUIx
-    implementation("top.yukonga.miuix.kmp:miuix-ui-android:0.9.2")
-    implementation("top.yukonga.miuix.kmp:miuix-icons:0.9.2")
-    implementation("top.yukonga.miuix.kmp:miuix-preference:0.9.2")
-    implementation("top.yukonga.miuix.kmp:miuix-navigation3-ui:0.9.2")
-    implementation("top.yukonga.miuix.kmp:miuix-blur:0.9.2")
+    implementation("top.yukonga.miuix.kmp:miuix-ui-android:0.9.3")
+    implementation("top.yukonga.miuix.kmp:miuix-icons:0.9.3")
+    implementation("top.yukonga.miuix.kmp:miuix-preference:0.9.3")
+    implementation("top.yukonga.miuix.kmp:miuix-navigation3-ui:0.9.3")
+    implementation("top.yukonga.miuix.kmp:miuix-blur:0.9.3")
 
     implementation("androidx.navigation3:navigation3-runtime:1.1.2")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
